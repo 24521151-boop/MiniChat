@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class TCPServer:
     """TCP server that handles each client connection in a dedicated thread."""
 
-    def __init__(self, host: str = "0.0.0.0", port: int = TCP_PORT) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = TCP_PORT) -> None:
         self.host = host
         self.port = port
         self.clients = ClientManager()
