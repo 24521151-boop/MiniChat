@@ -82,6 +82,22 @@ class ClientManager:
                 except OSError:
                     logger.info("Could not update user list for %s", name)
 
+    def close_all(self) -> None:
+        """Close every active socket during server shutdown."""
+        with self._lock:
+            clients = list(self._clients.items())
+            self._clients.clear()
+        for username, conn in clients:
+            try:
+                conn.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            try:
+                conn.close()
+            except OSError:
+                pass
+            logger.info("Closed connection for %s during server shutdown", username)
+
     def publish_user_list(self) -> None:
         payload = json.dumps(self.names(), ensure_ascii=False)
         self.broadcast(create_message(MsgType.USER_LIST, payload=payload))
