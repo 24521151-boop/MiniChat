@@ -2,52 +2,69 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12%20(64--bit)-blue.svg)
 ![CustomTkinter](https://img.shields.io/badge/GUI-CustomTkinter-green.svg)
-![Protocol](https://img.shields.io/badge/Network-TCP%20%2F%20UDP-orange.svg)
+![Protocol](https://img.shields.io/badge/Network-TCP-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 📖 Giới thiệu
-**MiniChat** là một ứng dụng chat cơ bản được phát triển bằng ngôn ngữ **Python 3.12 (64-bit)**, phục vụ cho bài tập nhóm môn IT005. Ứng dụng cung cấp giao diện đồ họa hiện đại (GUI) và hỗ trợ các tính năng nhắn tin, quản lý trạng thái người dùng thông qua mạng LAN.
 
-Dự án tập trung vào việc ứng dụng lập trình mạng với **Socket (TCP/UDP)**, xử lý đa luồng (**Threading**) và tích hợp với giao diện đồ họa **CustomTkinter**.
+**MiniChat** là ứng dụng nhắn tin nhiều người dùng được xây dựng bằng **Python 3.12**, phục vụ bài tập nhóm môn IT005. Ứng dụng sử dụng mô hình **Client–Server**, giao tiếp qua TCP và cung cấp giao diện đồ họa bằng **CustomTkinter**.
 
-## ✨ Tính năng chính
-- **Đăng nhập:** Người dùng đăng nhập vào hệ thống bằng tên (Username) thông qua giao thức TCP.
-- **Chat chung (Global Chat):** Mọi người dùng đang online đều có thể gửi và nhận tin nhắn trong một khung chat chung.
-- **Chat riêng (Private Chat):** Người dùng có thể chọn một người cụ thể trong danh sách để trò chuyện 1-1.
-- **Trạng thái Online/Offline:** Hệ thống tự động cập nhật và hiển thị trạng thái hoạt động của người dùng theo thời gian thực (sử dụng UDP Heartbeat).
-- **Giao diện:** Sử dụng CustomTkinter mang lại giao diện Dark/Light mode hiện đại, dễ sử dụng.
+## ✨ Tính năng mục tiêu
+
+- **Đăng nhập:** Người dùng kết nối đến Server bằng tên người dùng.
+- **Chat chung:** Các Client gửi và nhận tin nhắn trong phòng chat chung.
+- **Chat riêng:** Người dùng chọn một người để trao đổi tin nhắn 1-1.
+- **Danh sách người dùng:** Hiển thị danh sách tài khoản mà Server đang quản lý; không triển khai cơ chế theo dõi trạng thái online/offline riêng.
+- **Giao diện đồ họa:** Xây dựng bằng CustomTkinter.
+
+> Phạm vi hiện tại không bao gồm gửi file hoặc cập nhật trạng thái online/offline bằng UDP heartbeat.
 
 ## 🛠 Công nghệ sử dụng
+
 - **Ngôn ngữ:** Python 3.12 (64-bit)
-- **Giao diện (GUI):** [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
-- **Giao thức mạng:**
-  - **TCP:** Dùng cho các tác vụ yêu cầu độ tin cậy cao (Đăng nhập, Gửi tin nhắn chung/riêng).
-  - **UDP:** Dùng cho các tác vụ yêu cầu tốc độ nhanh, không cần đảm bảo 100% (Heartbeat, Trạng thái online/offline).
-- **Xử lý đa luồng:** Sử dụng `threading` và `queue.Queue` để tách biệt luồng nhận dữ liệu mạng (`socket.recv()`) và luồng cập nhật giao diện, giúp GUI không bị đơ (freeze).
+- **Giao diện:** [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
+- **Mạng:** Socket TCP
+- **Đa luồng:** `threading` để xử lý kết nối và nhận dữ liệu mà không làm treo giao diện.
+- **Trao đổi thông điệp:** JSON, mỗi thông điệp kết thúc bằng ký tự xuống dòng (`\n`) để phân tách dữ liệu trên luồng TCP.
 
 ## 📂 Cấu trúc thư mục
+
+### Cấu trúc hiện có
+
 ```text
 MiniChat/
-│
-├── common/                         # Quy ước dùng chung giữa Client và Server
-│   ├── constants.py                # Chứa các hằng số: TCP_PORT, UDP_PORT, BUFFER_SIZE, HEARTBEAT_INTERVAL
-│   └── protocol.py                 # Định nghĩa cấu trúc gói tin (LOGIN, CHAT_ALL, CHAT_PRIVATE, USER_LIST, HEARTBEAT)
-│
-├── server/                         # Máy chủ trung tâm điều phối
-│   ├── main.py                     # Khởi tạo và chạy song song 2 luồng (Thread) cho TCP và UDP Server
-│   ├── tcp_server.py               # Lắng nghe kết nối TCP, accept() và tạo luồng riêng cho từng Client
-│   ├── udp_server.py               # Lắng nghe gói tin UDP (chủ yếu là tín hiệu Heartbeat từ Client)
-│   ├── client_manager.py           # Quản lý danh sách user online: {username: tcp_socket}.
-│   ├── message_handler.py          # Xử lý logic: Định tuyến tin nhắn Chat chung và Chat riêng.
-│   └── presence_manager.py         # Quản lý trạng thái Online/Offline dựa trên Heartbeat.
-│
-├── client/                         # Máy khách (Xử lý mạng + Giao diện)
-│   ├── main.py                     # Khởi chạy ứng dụng CustomTkinter.
-│   ├── tcp_client.py               # Kết nối TCP, luồng riêng nhận dữ liệu qua socket.recv().
-│   ├── udp_client.py               # Luồng riêng gửi gói HEARTBEAT qua UDP mỗi 5 giây.
-│   ├── event_handler.py            # Cầu nối giữa UI và Mạng (Sử dụng Queue).
-│   └── ui/                         # Giao diện CustomTkinter
-│       ├── login_view.py           # Form nhập tên người dùng.
-│       └── main_view.py            # Màn hình chính: Danh sách User và Khung Chat.
-│
+├── common/
+│   ├── constants.py    # Cấu hình dùng chung: địa chỉ Server, cổng TCP, buffer, encoding
+│   └── protocol.py     # Định nghĩa loại thông điệp và hàm đóng gói/phân tích JSON
+├── .gitignore
 └── README.md
+```
+
+### Cấu trúc dự kiến khi hoàn thiện
+
+```text
+MiniChat/
+├── common/                     # Thành phần dùng chung giữa Client và Server
+│   ├── constants.py            # Cấu hình mạng và mã hóa
+│   └── protocol.py             # Định dạng thông điệp: LOGIN, LOGOUT, USER_LIST,
+│                               # CHAT_ALL, CHAT_PRIVATE, SYSTEM
+│
+├── server/                     # Xử lý kết nối và định tuyến tin nhắn
+│   ├── main.py                 # Điểm khởi chạy Server
+│   ├── tcp_server.py           # Lắng nghe kết nối TCP và nhận dữ liệu từ Client
+│   ├── client_manager.py       # Quản lý các Client đang kết nối
+│   └── message_handler.py      # Xử lý đăng nhập, chat chung và chat riêng
+│
+├── client/                     # Kết nối mạng và giao diện người dùng
+│   ├── main.py                 # Điểm khởi chạy ứng dụng Client
+│   ├── tcp_client.py           # Kết nối Server và nhận/gửi thông điệp TCP
+│   ├── event_handler.py        # Kết nối sự kiện giao diện với xử lý mạng
+│   └── ui/
+│       ├── login_view.py       # Màn hình đăng nhập
+│       └── main_view.py        # Màn hình chat và danh sách người dùng
+│
+├── .gitignore
+└── README.md
+```
+
+> **Lưu ý:** Phần “Cấu trúc dự kiến” là thiết kế mục tiêu, không có nghĩa các thư mục và tệp đó đã được tạo trong repository. Khi cấu trúc mã nguồn thay đổi, hãy cập nhật lại sơ đồ này để README luôn phản ánh đúng dự án.
