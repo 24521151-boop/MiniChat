@@ -14,10 +14,9 @@
 - **Đăng nhập:** Người dùng kết nối đến Server bằng tên người dùng.
 - **Chat chung:** Các Client gửi và nhận tin nhắn trong phòng chat chung.
 - **Chat riêng:** Người dùng chọn một người để trao đổi tin nhắn 1-1.
-- **Danh sách người dùng:** Hiển thị danh sách tài khoản mà Server đang quản lý; không triển khai cơ chế theo dõi trạng thái online/offline riêng.
+- **Danh sách người dùng:** Hiển thị danh sách tài khoản mà Server đang quản lý.
 - **Giao diện đồ họa:** Xây dựng bằng CustomTkinter.
 
-> Phạm vi hiện tại không bao gồm gửi file hoặc cập nhật trạng thái online/offline bằng UDP heartbeat.
 
 ## 🛠 Công nghệ sử dụng
 
