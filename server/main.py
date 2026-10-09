@@ -1,6 +1,4 @@
 import logging
-import signal
-import threading
 
 from server.tcp_server import TCPServer
 
