@@ -55,12 +55,12 @@ MiniChat/
 
 ## Cài đặt và chạy trên Windows
 
-Yêu cầu Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
+Yêu cầu phiên bản trên Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
 
 ### 1. Tạo môi trường và cài thư viện
 
 ```powershell
-py -3.12 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
