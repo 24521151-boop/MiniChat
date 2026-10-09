@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class ClientManager:
-    """Thread-safe registry of authenticated client connections."""
+    """Thread-safe registry of authenticated clients and serialized socket writes."""
 
     def __init__(self) -> None:
         self._clients: dict[str, socket.socket] = {}
         self._lock = threading.RLock()
+        # Prevent concurrent handlers from interleaving JSON lines on the same TCP stream.
+        self._send_lock = threading.Lock()
 
     def add(self, username: str, conn: socket.socket) -> bool:
         with self._lock:
@@ -46,7 +48,8 @@ class ClientManager:
         if conn is None:
             return False
         try:
-            conn.sendall(raw_message.encode(ENCODING))
+            with self._send_lock:
+                conn.sendall(raw_message.encode(ENCODING))
             return True
         except OSError:
             logger.info("Could not send message to %s", username)
@@ -59,11 +62,25 @@ class ClientManager:
         data = raw_message.encode(ENCODING)
         for name, conn in recipients:
             try:
-                conn.sendall(data)
+                with self._send_lock:
+                    conn.sendall(data)
             except OSError:
                 failed.append((name, conn))
         for name, conn in failed:
             self.remove(name, conn)
+        # A failed socket may have been removed before its handler gets to clean up.
+        # Publish the corrected list so the remaining clients do not keep stale entries.
+        if failed:
+            names_payload = json.dumps(self.names(), ensure_ascii=False)
+            list_message = create_message(MsgType.USER_LIST, payload=names_payload).encode(ENCODING)
+            with self._lock:
+                remaining = list(self._clients.items())
+            for name, conn in remaining:
+                try:
+                    with self._send_lock:
+                        conn.sendall(list_message)
+                except OSError:
+                    logger.info("Could not update user list for %s", name)
 
     def publish_user_list(self) -> None:
         payload = json.dumps(self.names(), ensure_ascii=False)
