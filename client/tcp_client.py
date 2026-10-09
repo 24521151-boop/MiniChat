@@ -26,9 +26,9 @@ class TCPClient:
             return False, "Client đã kết nối."
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
+        self.socket = sock
         try:
             sock.connect((self.host, self.port))
-            self.socket = sock
             self.username = username.strip()
             self.send(MsgType.LOGIN, payload=self.username)
             # Read exactly the first response line so bytes after it remain for the receiver.
@@ -99,11 +99,12 @@ class TCPClient:
                 pass
 
     def _receive_loop(self, initial: bytes = b"") -> None:
-        buffer = initial
+        buffer = bytearray(initial)
         try:
             while not self._stop_event.is_set():
-                if "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
+                if b"\n" in buffer:
+                    line, _, remainder = buffer.partition(b"\n")
+                    buffer = bytearray(remainder)
                     self._enqueue_line(line)
                     continue
                 sock = self.socket
@@ -112,9 +113,9 @@ class TCPClient:
                 chunk = sock.recv(BUFFER_SIZE)
                 if not chunk:
                     break
-                buffer += chunk.decode(ENCODING)
-                if len(buffer) > 1_000_000 and "\n" not in buffer:
-                    self.incoming.put({"type": "SYSTEM", "payload": json.dumps({"event": "ERROR", "message": "Thông điệp nhận quá lớn."})})
+                buffer.extend(chunk)
+                if len(buffer) > 1_000_000 and b"\n" not in buffer:
+                    self.incoming.put({"type": "SYSTEM", "payload": json.dumps({"event": "ERROR", "message": "Thông điệp nhận quá lớn."}, ensure_ascii=False)})
                     break
         except (OSError, UnicodeDecodeError) as exc:
             if not self._stop_event.is_set():
@@ -123,11 +124,11 @@ class TCPClient:
             self._stop_event.set()
             self.incoming.put({"type": "_DISCONNECTED", "payload": ""})
 
-    def _enqueue_line(self, line: str) -> None:
+    def _enqueue_line(self, line: bytes) -> None:
         if not line.strip():
             return
         try:
-            item = json.loads(line)
+            item = json.loads(line.decode(ENCODING))
             if isinstance(item, dict):
                 self.incoming.put(item)
         except json.JSONDecodeError:
