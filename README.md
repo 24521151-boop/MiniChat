@@ -1,53 +1,53 @@
-# MiniChat - Bài tập nhóm 4 môn IT005
+# MiniChat - Bài tập nhóm môn IT005
 
-![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.12%20(64--bit)-blue.svg)
 ![CustomTkinter](https://img.shields.io/badge/GUI-CustomTkinter-green.svg)
+![Protocol](https://img.shields.io/badge/Network-TCP%20%2F%20UDP-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 📖 Giới thiệu
-**MiniChat** là một ứng dụng chat cơ bản được phát triển bằng ngôn ngữ Python, phục vụ cho bài tập nhóm môn IT005. Ứng dụng cung cấp giao diện đồ họa thân thiện (GUI) và hỗ trợ các tính năng nhắn tin, gửi file và quản lý trạng thái người dùng thông qua mạng LAN.
+**MiniChat** là một ứng dụng chat cơ bản được phát triển bằng ngôn ngữ **Python 3.12 (64-bit)**, phục vụ cho bài tập nhóm môn IT005. Ứng dụng cung cấp giao diện đồ họa hiện đại (GUI) và hỗ trợ các tính năng nhắn tin, quản lý trạng thái người dùng thông qua mạng LAN.
+
+Dự án tập trung vào việc ứng dụng lập trình mạng với **Socket (TCP/UDP)**, xử lý đa luồng (**Threading**) và tích hợp với giao diện đồ họa **CustomTkinter**.
 
 ## ✨ Tính năng chính
 - **Đăng nhập:** Người dùng đăng nhập vào hệ thống bằng tên (Username) thông qua giao thức TCP.
-- **Chat nhóm:** Tạo phòng mới, tham gia phòng và trò chuyện với nhiều người (TCP).
-- **Chat riêng:** Nhắn tin trực tiếp 1-1 giữa hai người dùng.
-- **Gửi file:** Hỗ trợ gửi file tài liệu trong cả chat nhóm và chat riêng (TCP).
-- **Trạng thái:** Hiển thị trạng thái Online/Offline và trạng thái "đang nhập" (typing) thời gian thực (UDP).
-- **Giao diện:** Sử dụng CustomTkinter mang lại giao diện hiện đại, dễ sử dụng.
+- **Chat chung (Global Chat):** Mọi người dùng đang online đều có thể gửi và nhận tin nhắn trong một khung chat chung.
+- **Chat riêng (Private Chat):** Người dùng có thể chọn một người cụ thể trong danh sách để trò chuyện 1-1.
+- **Trạng thái Online/Offline:** Hệ thống tự động cập nhật và hiển thị trạng thái hoạt động của người dùng theo thời gian thực (sử dụng UDP Heartbeat).
+- **Giao diện:** Sử dụng CustomTkinter mang lại giao diện Dark/Light mode hiện đại, dễ sử dụng.
 
 ## 🛠 Công nghệ sử dụng
-- **Ngôn ngữ:** Python 3.x
+- **Ngôn ngữ:** Python 3.12 (64-bit)
 - **Giao diện (GUI):** [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
 - **Giao thức mạng:**
-  - **TCP:** Dùng cho các tác vụ yêu cầu độ tin cậy cao (Đăng nhập, Gửi tin nhắn, Truyền file).
-  - **UDP:** Dùng cho các tác vụ yêu cầu tốc độ nhanh, không cần đảm bảo 100% (Heartbeat, Trạng thái online/offline, Typing indicator).
+  - **TCP:** Dùng cho các tác vụ yêu cầu độ tin cậy cao (Đăng nhập, Gửi tin nhắn chung/riêng).
+  - **UDP:** Dùng cho các tác vụ yêu cầu tốc độ nhanh, không cần đảm bảo 100% (Heartbeat, Trạng thái online/offline).
+- **Xử lý đa luồng:** Sử dụng `threading` và `queue.Queue` để tách biệt luồng nhận dữ liệu mạng (`socket.recv()`) và luồng cập nhật giao diện, giúp GUI không bị đơ (freeze).
 
 ## 📂 Cấu trúc thư mục
 ```text
 MiniChat/
-├── client/                     # Mã nguồn phía người dùng
-│   ├── main.py                 # Khởi chạy ứng dụng client
-│   ├── tcp_client.py           # Kết nối TCP, gửi/nhận tin nhắn và file
-│   ├── udp_client.py           # Gửi heartbeat, trạng thái đăng nhập
-│   ├── event_handler.py        # Xử lý thao tác, kết nối UI với mạng
-│   └── ui/                     # Chứa các giao diện (Views)
-│       ├── login_view.py       # Giao diện đăng nhập
-│       ├── main_view.py        # Giao diện chính (danh sách user, phòng)
-│       ├── room_view.py        # Giao diện chat nhóm
-│       ├── private_chat_view.py# Giao diện chat riêng
-│       └── file_view.py        # Giao diện chọn, gửi, nhận file
-├── server/                     # Mã nguồn phía máy chủ
-│   ├── main.py                 # Khởi chạy server TCP và UDP
-│   ├── tcp_server.py           # Lắng nghe và chấp nhận kết nối TCP
-│   ├── udp_server.py           # Nhận và gửi datagram UDP
-│   ├── client_manager.py       # Quản lý client đang kết nối
-│   ├── room_manager.py         # Tạo phòng, quản lý thành viên
-│   ├── message_handler.py      # Xử lý, định tuyến tin nhắn
-│   ├── file_handler.py         # Tiếp nhận, lưu trữ, chuyển tiếp file
-│   └── presence_manager.py     # Quản lý trạng thái online/offline
-├── common/                     # Quy ước dùng chung
-│   ├── protocol.py             # Định dạng thông điệp, cấu trúc gói tin
-│   └── constants.py            # Hằng số (cổng TCP/UDP, giới hạn file)
-├── data/                       # Thư mục lưu trữ dữ liệu
-│   └── files/                  # Lưu file tài liệu được gửi qua chat
+│
+├── common/                         # Quy ước dùng chung giữa Client và Server
+│   ├── constants.py                # Chứa các hằng số: TCP_PORT, UDP_PORT, BUFFER_SIZE, HEARTBEAT_INTERVAL
+│   └── protocol.py                 # Định nghĩa cấu trúc gói tin (LOGIN, CHAT_ALL, CHAT_PRIVATE, USER_LIST, HEARTBEAT)
+│
+├── server/                         # Máy chủ trung tâm điều phối
+│   ├── main.py                     # Khởi tạo và chạy song song 2 luồng (Thread) cho TCP và UDP Server
+│   ├── tcp_server.py               # Lắng nghe kết nối TCP, accept() và tạo luồng riêng cho từng Client
+│   ├── udp_server.py               # Lắng nghe gói tin UDP (chủ yếu là tín hiệu Heartbeat từ Client)
+│   ├── client_manager.py           # Quản lý danh sách user online: {username: tcp_socket}.
+│   ├── message_handler.py          # Xử lý logic: Định tuyến tin nhắn Chat chung và Chat riêng.
+│   └── presence_manager.py         # Quản lý trạng thái Online/Offline dựa trên Heartbeat.
+│
+├── client/                         # Máy khách (Xử lý mạng + Giao diện)
+│   ├── main.py                     # Khởi chạy ứng dụng CustomTkinter.
+│   ├── tcp_client.py               # Kết nối TCP, luồng riêng nhận dữ liệu qua socket.recv().
+│   ├── udp_client.py               # Luồng riêng gửi gói HEARTBEAT qua UDP mỗi 5 giây.
+│   ├── event_handler.py            # Cầu nối giữa UI và Mạng (Sử dụng Queue).
+│   └── ui/                         # Giao diện CustomTkinter
+│       ├── login_view.py           # Form nhập tên người dùng.
+│       └── main_view.py            # Màn hình chính: Danh sách User và Khung Chat.
+│
 └── README.md
