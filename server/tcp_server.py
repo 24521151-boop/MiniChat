@@ -82,11 +82,11 @@ class TCPServer:
                     if not chunk:
                         break
                     buffer.extend(chunk)
-                    if len(buffer) > 1_000_000 and b"\\n" not in buffer:
+                    if len(buffer) > 1_000_000 and b"\n" not in buffer:
                         logger.warning("Oversized unterminated message from %s", address)
                         break
-                    while b"\\n" in buffer:
-                        line, _, remainder = buffer.partition(b"\\n")
+                    while b"\n" in buffer:
+                        line, _, remainder = buffer.partition(b"\n")
                         buffer = bytearray(remainder)
                         if not line.strip():
                             continue
