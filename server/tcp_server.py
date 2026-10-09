@@ -81,19 +81,21 @@ class TCPServer:
                     chunk = conn.recv(BUFFER_SIZE)
                     if not chunk:
                         break
-                    try:
-                        buffer += chunk.decode(ENCODING)
-                    except UnicodeDecodeError:
-                        logger.warning("Invalid UTF-8 received from %s", address)
-                        break
-                    if len(buffer) > 1_000_000 and "\n" not in buffer:
+                    buffer.extend(chunk)
+                    if len(buffer) > 1_000_000 and b"\\n" not in buffer:
                         logger.warning("Oversized unterminated message from %s", address)
                         break
-                    while "\n" in buffer:
-                        line, buffer = buffer.split("\n", 1)
+                    while b"\\n" in buffer:
+                        line, _, remainder = buffer.partition(b"\\n")
+                        buffer = bytearray(remainder)
                         if not line.strip():
                             continue
-                        message = parse_message(line)
+                        try:
+                            decoded_line = line.decode(ENCODING)
+                        except UnicodeDecodeError:
+                            logger.warning("Invalid UTF-8 received from %s", address)
+                            continue
+                        message = parse_message(decoded_line)
                         if message is None:
                             continue
                         username = self.handler.handle(conn, username, message)
