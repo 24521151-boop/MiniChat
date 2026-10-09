@@ -2,7 +2,7 @@ import logging
 import socket
 import threading
 
-from common.constants import BUFFER_SIZE, ENCODING, SERVER_IP, TCP_PORT
+from common.constants import BUFFER_SIZE, ENCODING, TCP_PORT
 from common.protocol import parse_message
 from server.client_manager import ClientManager
 from server.message_handler import MessageHandler
