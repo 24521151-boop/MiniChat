@@ -5,8 +5,12 @@ from enum import Enum
 from typing import Optional
 
 # Cấu hình logging cơ bản
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
+
 
 # 1. Danh sách loại thông điệp hợp lệ
 class MsgType(str, Enum):
@@ -17,6 +21,20 @@ class MsgType(str, Enum):
     CHAT_PRIVATE = "CHAT_PRIVATE"
     SYSTEM = "SYSTEM"
 
+    # Các loại thông điệp phục vụ gửi file qua TCP.
+    # FILE_OFFER: thông tin file (payload là JSON dạng chuỗi, ví dụ tên file/kích thước).
+    # FILE_ACCEPT / FILE_REJECT: người nhận chấp nhận hoặc từ chối file.
+    # FILE_CHUNK: một phần dữ liệu file (payload chứa dữ liệu đã mã hóa Base64).
+    # FILE_END: báo đã gửi xong file.
+    # FILE_CANCEL: hủy phiên gửi file.
+    FILE_OFFER = "FILE_OFFER"
+    FILE_ACCEPT = "FILE_ACCEPT"
+    FILE_REJECT = "FILE_REJECT"
+    FILE_CHUNK = "FILE_CHUNK"
+    FILE_END = "FILE_END"
+    FILE_CANCEL = "FILE_CANCEL"
+
+
 # 2. Cấu trúc thống nhất của một thông điệp
 @dataclass(frozen=True)
 class Message:
@@ -25,6 +43,7 @@ class Message:
     receiver: str = ""
     payload: str = ""
 
+
 # 3. Đóng gói thông điệp thành JSON
 def create_message(
     msg_type: MsgType | str,
@@ -32,12 +51,12 @@ def create_message(
     receiver: str = "",
     payload: str = "",
 ) -> str:
-    try:
-        # Tự động chuyển đổi string sang Enum nếu cần
-        if isinstance(msg_type, str):
+    # Tự động chuyển đổi string sang Enum nếu cần.
+    if isinstance(msg_type, str):
+        try:
             msg_type = MsgType(msg_type)
-    except ValueError:
-        raise ValueError(f"Loại thông điệp không hợp lệ: {msg_type!r}")
+        except ValueError as exc:
+            raise ValueError(f"Loại thông điệp không hợp lệ: {msg_type!r}") from exc
 
     if not all(isinstance(value, str) for value in (sender, receiver, payload)):
         raise TypeError("sender, receiver và payload phải là chuỗi")
@@ -49,34 +68,33 @@ def create_message(
         "payload": payload,
     }
 
-    # Thêm ký tự xuống dòng để đánh dấu kết thúc gói tin (xử lý TCP stream)
+    # Ký tự xuống dòng đánh dấu kết thúc một thông điệp trong TCP stream.
     return json.dumps(data, ensure_ascii=False) + "\n"
+
 
 # 4. Phân tích và kiểm tra thông điệp JSON
 def parse_message(message_str: str) -> Optional[Message]:
     try:
         data = json.loads(message_str)
 
-        # 1. Kiểm tra kiểu dữ liệu gốc phải là dict
         if not isinstance(data, dict):
             logger.warning("Dữ liệu nhận được không phải dạng dict")
             return None
 
-        # 2. Kiểm tra các trường bắt buộc
         required_fields = ("type", "sender", "receiver", "payload")
         if not all(field in data for field in required_fields):
-            logger.warning(f"Thiếu trường dữ liệu bắt buộc. Có: {list(data.keys())}")
+            logger.warning(
+                "Thiếu trường dữ liệu bắt buộc. Có: %s",
+                list(data.keys()),
+            )
             return None
 
-        # 3. Kiểm tra kiểu dữ liệu của các trường phải là chuỗi
         if not all(isinstance(data[field], str) for field in required_fields):
             logger.warning("Kiểu dữ liệu các trường không phải là chuỗi")
             return None
 
-        # 4. Chuyển đổi type sang Enum (có thể ném ValueError)
         msg_type = MsgType(data["type"])
 
-        # 5. Trả về đối tượng Message hoàn chỉnh
         return Message(
             msg_type=msg_type,
             sender=data["sender"],
@@ -85,10 +103,13 @@ def parse_message(message_str: str) -> Optional[Message]:
         )
 
     except json.JSONDecodeError:
-        logger.warning(f"Thông điệp không phải JSON hợp lệ: {message_str[:50]}...")
+        logger.warning("Thông điệp không phải JSON hợp lệ: %s...", message_str[:50])
         return None
     except ValueError:
-        logger.warning(f"Loại thông điệp không hợp lệ: {data.get('type') if 'data' in locals() else 'Unknown'}")
+        logger.warning(
+            "Loại thông điệp không hợp lệ: %s",
+            data.get("type") if "data" in locals() and isinstance(data, dict) else "Unknown",
+        )
         return None
     except TypeError:
         logger.warning("Kiểu dữ liệu thông điệp không hợp lệ")
