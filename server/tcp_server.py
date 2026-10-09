@@ -72,7 +72,7 @@ class TCPServer:
 
     def _client_loop(self, conn: socket.socket, address: tuple[str, int]) -> None:
         username: str | None = None
-        buffer = ""
+        buffer = bytearray()
         logger.info("Connection from %s:%s", *address)
         try:
             with conn:
