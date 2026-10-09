@@ -63,6 +63,7 @@ class TCPServer:
                 self._server_socket.close()
             except OSError:
                 pass
+        self.clients.close_all()
         with self._threads_lock:
             threads = list(self._threads)
         for thread in threads:
