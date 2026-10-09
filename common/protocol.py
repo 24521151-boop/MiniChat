@@ -21,19 +21,6 @@ class MsgType(str, Enum):
     CHAT_PRIVATE = "CHAT_PRIVATE"
     SYSTEM = "SYSTEM"
 
-    # Các loại thông điệp phục vụ gửi file qua TCP.
-    # FILE_OFFER: thông tin file (payload là JSON dạng chuỗi, ví dụ tên file/kích thước).
-    # FILE_ACCEPT / FILE_REJECT: người nhận chấp nhận hoặc từ chối file.
-    # FILE_CHUNK: một phần dữ liệu file (payload chứa dữ liệu đã mã hóa Base64).
-    # FILE_END: báo đã gửi xong file.
-    # FILE_CANCEL: hủy phiên gửi file.
-    FILE_OFFER = "FILE_OFFER"
-    FILE_ACCEPT = "FILE_ACCEPT"
-    FILE_REJECT = "FILE_REJECT"
-    FILE_CHUNK = "FILE_CHUNK"
-    FILE_END = "FILE_END"
-    FILE_CANCEL = "FILE_CANCEL"
-
 
 # 2. Cấu trúc thống nhất của một thông điệp
 @dataclass(frozen=True)
