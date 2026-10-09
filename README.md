@@ -97,9 +97,6 @@ Mở thêm cửa sổ Client bằng cách chạy lại lệnh để thử nhiề
 
 Không mở cổng này ra Internet công cộng; bản demo chưa có mã hóa TLS hay cơ chế xác thực tài khoản.
 
-## Giao thức thông điệp
-
-Các loại thông điệp: `LOGIN`, `LOGOUT`, `USER_LIST`, `CHAT_ALL`, `CHAT_PRIVATE`, `SYSTEM`. Mỗi thông điệp là một JSON object với các trường `type`, `sender`, `receiver`, `payload`, kết thúc bằng `\n`. Vì TCP là luồng byte, chương trình phải tách thông điệp theo dấu xuống dòng thay vì giả định mỗi lần `recv()` tương ứng đúng một thông điệp.
 
 ## Kiểm thử demo
 
