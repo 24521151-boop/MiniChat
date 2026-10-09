@@ -28,20 +28,6 @@
 - **Trao đổi thông điệp:** JSON, mỗi thông điệp kết thúc bằng ký tự xuống dòng (`\n`) để phân tách dữ liệu trên luồng TCP.
 
 ## 📂 Cấu trúc thư mục
-
-### Cấu trúc hiện có
-
-```text
-MiniChat/
-├── common/
-│   ├── constants.py    # Cấu hình dùng chung: địa chỉ Server, cổng TCP, buffer, encoding
-│   └── protocol.py     # Định nghĩa loại thông điệp và hàm đóng gói/phân tích JSON
-├── .gitignore
-└── README.md
-```
-
-### Cấu trúc dự kiến khi hoàn thiện
-
 ```text
 MiniChat/
 ├── common/                     # Thành phần dùng chung giữa Client và Server
