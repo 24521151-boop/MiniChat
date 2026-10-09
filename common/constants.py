@@ -1,24 +1,18 @@
-
-
 # ==========================================
 # CẤU HÌNH MẠNG
 # ==========================================
-# Địa chỉ IP của Server (127.0.0.1 dùng để chạy test trên cùng 1 máy)
-# Khi chạy thực tế trên LAN, các máy Client cần trỏ về IP của máy chạy Server.
-SERVER_IP = "127.0.0.1" 
+# Địa chỉ IP của Server.
+# 127.0.0.1 chỉ dùng khi Client và Server chạy trên cùng một máy.
+# Khi chạy qua LAN, đổi thành địa chỉ IP của máy chạy Server.
+SERVER_IP = "127.0.0.1"
 
-TCP_PORT = 9999  # Cổng cho giao thức TCP (Đăng nhập, Chat)
-UDP_PORT = 9998  # Cổng cho giao thức UDP (Heartbeat - Trạng thái)
+# Cổng TCP dùng cho đăng nhập, chat và trao đổi dữ liệu gửi file.
+TCP_PORT = 9999
 
-BUFFER_SIZE = 4096  # Kích thước tối đa của một gói tin nhận được (bytes)
-ENCODING = "utf-8"  # Chuẩn mã hóa ký tự
+# Kích thước bộ đệm nhận dữ liệu (bytes).
+# Dữ liệu TCP cần được đọc theo từng dòng/thông điệp; không mặc định
+# rằng một lần recv() tương ứng với một thông điệp hoàn chỉnh.
+BUFFER_SIZE = 4096
 
-# ==========================================
-# CẤU HÌNH TRẠNG THÁI (HEARTBEAT)
-# ==========================================
-# Thời gian (giây) Client gửi tín hiệu "Tôi vẫn đang sống" lên Server
-HEARTBEAT_INTERVAL = 5 
-
-# Thời gian (giây) Server chờ đợi. Nếu quá thời gian này không nhận được Heartbeat,
-# Server sẽ đánh dấu Client đó là Offline.
-TIMEOUT_THRESHOLD = 10 
+# Chuẩn mã hóa cho dữ liệu văn bản.
+ENCODING = "utf-8"
