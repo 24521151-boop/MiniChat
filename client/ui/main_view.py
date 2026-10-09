@@ -10,6 +10,11 @@ class MainView(ctk.CTkFrame):
         self.on_logout = on_logout
         self.selected_user: str | None = None
         self._users: list[str] = []
+        # Keep a separate message history for the global room and each private chat.
+        self._global_history: list[tuple[str, str, str]] = []
+        self._private_history: dict[str, list[tuple[str, str, str]]] = {}
+        self._unread_private: dict[str, int] = {}
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
@@ -59,13 +64,17 @@ class MainView(ctk.CTkFrame):
         self.selected_user = None
         self.room_label.configure(text="Phòng chat chung")
         self._highlight_users()
+        self._render_history(self._global_history)
 
     def select_private(self, username: str):
         if username == self.username:
             return
         self.selected_user = username
+        self._unread_private[username] = 0
         self.room_label.configure(text=f"Chat riêng với {username}")
         self._highlight_users()
+        self._render_history(self._private_history.setdefault(username, []))
+        self._refresh_user_buttons()
 
     def set_users(self, names: list[str]):
         self._users = names
@@ -74,29 +83,78 @@ class MainView(ctk.CTkFrame):
         for name in names:
             if name == self.username:
                 continue
-            button = ctk.CTkButton(self.user_list, text=name, anchor="w", fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray85", "gray25"), command=lambda n=name: self.select_private(n))
+            unread = self._unread_private.get(name, 0)
+            label = f"{name}  ({unread} mới)" if unread else name
+            button = ctk.CTkButton(
+                self.user_list,
+                text=label,
+                anchor="w",
+                fg_color=("gray80", "gray25") if name == self.selected_user else "transparent",
+                text_color=("gray10", "gray90"),
+                hover_color=("gray85", "gray30"),
+                command=lambda n=name: self.select_private(n),
+            )
             button.pack(fill="x", padx=3, pady=2)
         if self.selected_user and self.selected_user not in names:
             self.select_global()
 
+    def _refresh_user_buttons(self):
+        # Rebuild labels so unread counters and the selected conversation stay in sync.
+        self.set_users(self._users)
+
     def _highlight_users(self):
-        # Room selection is reflected in the title; buttons remain simple and predictable.
-        return
+        self._refresh_user_buttons()
 
     def show_global_message(self, sender: str, text: str):
-        self._append(sender or "Người dùng", text)
+        entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
+        self._global_history.append(entry)
+        if self.selected_user is None:
+            self._append_entry(entry)
 
     def show_private_message(self, sender: str, receiver: str, text: str):
+        # The server sends a copy to both participants. Save it even if this chat
+        # is not currently selected, so switching conversations never loses messages.
         other = receiver if sender == self.username else sender
-        # Never place private content into the global room or another user's conversation.
+        if not other or other == self.username:
+            return
+        entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
+        history = self._private_history.setdefault(other, [])
+        history.append(entry)
+
         if self.selected_user == other:
-            self._append(f"[Riêng] {sender} → {receiver}", text)
+            self._append_entry(entry, private=True)
         elif sender != self.username:
-            self.show_system(f"Bạn có tin nhắn riêng từ {other}. Hãy chọn người đó để xem nội dung.");
+            self._unread_private[other] = self._unread_private.get(other, 0) + 1
+            self._refresh_user_buttons()
 
     def show_system(self, text: str):
         if text:
             self._append("Hệ thống", text)
+
+    def _render_history(self, history: list[tuple[str, str, str]]):
+        self.messages.configure(state="normal")
+        self.messages.delete("1.0", "end")
+        for entry in history:
+            self._insert_entry(entry, private=self.selected_user is not None)
+        self.messages.see("end")
+        self.messages.configure(state="disabled")
+
+    def _append_entry(self, entry: tuple[str, str, str], private: bool = False):
+        self.messages.configure(state="normal")
+        self._insert_entry(entry, private=private)
+        self.messages.see("end")
+        self.messages.configure(state="disabled")
+
+    def _insert_entry(self, entry: tuple[str, str, str], private: bool = False):
+        timestamp, sender, text = entry
+        prefix = "[Riêng] " if private else ""
+        if private:
+            other = self.selected_user or ""
+            receiver = other if sender == self.username else self.username
+            sender_label = f"{prefix}{sender} → {receiver}"
+        else:
+            sender_label = sender
+        self.messages.insert("end", f"[{timestamp}] {sender_label}: {text}\n")
 
     def _append(self, sender: str, text: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
