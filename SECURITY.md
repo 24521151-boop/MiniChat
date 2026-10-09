@@ -2,20 +2,10 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+MiniChat is a student project under active development. No numbered releases are currently defined, so only the latest version on the `main` branch is considered supported for security fixes.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Please report suspected security vulnerabilities privately to the repository owner instead of posting exploit details in a public issue. If GitHub's private vulnerability reporting option is available in the repository's Security tab, use that option.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+This project is provided for educational use and has no guaranteed response time or service-level commitment for vulnerability reports.
