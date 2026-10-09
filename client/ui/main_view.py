@@ -87,13 +87,12 @@ class MainView(ctk.CTkFrame):
         self._append(sender or "Người dùng", text)
 
     def show_private_message(self, sender: str, receiver: str, text: str):
-        if sender == self.username:
-            other = receiver
-        else:
-            other = sender
-        self._append(f"[Riêng] {sender} → {receiver}", text)
-        if self.selected_user is None:
-            self.show_system(f"Bạn có tin nhắn riêng từ {other}.")
+        other = receiver if sender == self.username else sender
+        # Never place private content into the global room or another user's conversation.
+        if self.selected_user == other:
+            self._append(f"[Riêng] {sender} → {receiver}", text)
+        elif sender != self.username:
+            self.show_system(f"Bạn có tin nhắn riêng từ {other}. Hãy chọn người đó để xem nội dung.");
 
     def show_system(self, text: str):
         if text:
