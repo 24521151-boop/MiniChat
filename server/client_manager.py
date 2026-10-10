@@ -9,14 +9,12 @@ from common.protocol import MsgType, create_message
 
 logger = logging.getLogger(__name__)
 
-
 class ClientManager:
     """Thread-safe registry of authenticated clients and serialized socket writes."""
 
     def __init__(self) -> None:
         self._clients: dict[str, socket.socket] = {}
         self._lock = threading.RLock()
-        # Prevent concurrent handlers from interleaving JSON lines on the same TCP stream.
         self._send_lock = threading.Lock()
 
     def add(self, username: str, conn: socket.socket) -> bool:
@@ -68,8 +66,6 @@ class ClientManager:
                 failed.append((name, conn))
         for name, conn in failed:
             self.remove(name, conn)
-        # A failed socket may have been removed before its handler gets to clean up.
-        # Publish the corrected list so the remaining clients do not keep stale entries.
         if failed:
             names_payload = json.dumps(self.names(), ensure_ascii=False)
             list_message = create_message(MsgType.USER_LIST, payload=names_payload).encode(ENCODING)
