@@ -35,10 +35,19 @@ class EventHandler:
     def stop(self) -> None:
         self._running = False
 
+    def _show_notice(self, message: str) -> None:
+        """Send system notices to the dedicated panel, with backward compatibility."""
+        show_notification = getattr(self.view, "show_notification", None)
+        if callable(show_notification):
+            show_notification(message)
+        else:
+            # Compatibility with any alternate/older view implementation.
+            self.view.show_system(message)
+
     def _dispatch(self, item: dict[str, Any]) -> None:
         msg_type = item.get("type", "")
         if msg_type == "_DISCONNECTED":
-            self.view.show_system("Đã ngắt kết nối tới server.")
+            self._show_notice("Đã ngắt kết nối tới server.")
             self.on_disconnected()
             self.stop()
             return
@@ -61,4 +70,4 @@ class EventHandler:
                 payload = json.loads(item.get("payload", "{}"))
             except json.JSONDecodeError:
                 payload = {"event": "NOTICE", "message": item.get("payload", "")}
-            self.view.show_system(str(payload.get("message", "")))
+            self._show_notice(str(payload.get("message", "")))
