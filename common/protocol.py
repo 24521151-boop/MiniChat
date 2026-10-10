@@ -4,15 +4,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-# Cấu hình logging cơ bản
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-
-# 1. Danh sách loại thông điệp hợp lệ
 class MsgType(str, Enum):
     LOGIN = "LOGIN"
     LOGOUT = "LOGOUT"
@@ -21,8 +18,6 @@ class MsgType(str, Enum):
     CHAT_PRIVATE = "CHAT_PRIVATE"
     SYSTEM = "SYSTEM"
 
-
-# 2. Cấu trúc thống nhất của một thông điệp
 @dataclass(frozen=True)
 class Message:
     msg_type: MsgType
@@ -30,15 +25,12 @@ class Message:
     receiver: str = ""
     payload: str = ""
 
-
-# 3. Đóng gói thông điệp thành JSON
 def create_message(
     msg_type: MsgType | str,
     sender: str = "",
     receiver: str = "",
     payload: str = "",
 ) -> str:
-    # Tự động chuyển đổi string sang Enum nếu cần.
     if isinstance(msg_type, str):
         try:
             msg_type = MsgType(msg_type)
@@ -55,11 +47,8 @@ def create_message(
         "payload": payload,
     }
 
-    # Ký tự xuống dòng đánh dấu kết thúc một thông điệp trong TCP stream.
     return json.dumps(data, ensure_ascii=False) + "\n"
 
-
-# 4. Phân tích và kiểm tra thông điệp JSON
 def parse_message(message_str: str) -> Optional[Message]:
     try:
         data = json.loads(message_str)
