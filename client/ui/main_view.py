@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from datetime import datetime
 
-
 class MainView(ctk.CTkFrame):
     def __init__(self, master, username: str, on_send, on_logout, **kwargs):
         super().__init__(master, **kwargs)
@@ -10,7 +9,6 @@ class MainView(ctk.CTkFrame):
         self.on_logout = on_logout
         self.selected_user: str | None = None
         self._users: list[str] = []
-        # Keep a separate message history for the global room and each private chat.
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
@@ -49,8 +47,6 @@ class MainView(ctk.CTkFrame):
         self.user_list = ctk.CTkScrollableFrame(sidebar, label_text="Chọn người để chat riêng", height=220)
         self.user_list.pack(fill="both", expand=True, padx=8, pady=(4, 8))
 
-        # Keep system notices in a dedicated sidebar area so changing chat rooms
-        # never hides them or mixes them into the conversation history.
         notification_panel = ctk.CTkFrame(sidebar, corner_radius=10)
         notification_panel.pack(fill="x", padx=8, pady=(0, 10))
         ctk.CTkLabel(
@@ -117,7 +113,6 @@ class MainView(ctk.CTkFrame):
             self.select_global()
 
     def _refresh_user_buttons(self):
-        # Rebuild labels so unread counters and the selected conversation stay in sync.
         self.set_users(self._users)
 
     def _highlight_users(self):
@@ -130,8 +125,6 @@ class MainView(ctk.CTkFrame):
             self._append_entry(entry)
 
     def show_private_message(self, sender: str, receiver: str, text: str):
-        # The server sends a copy to both participants. Save it even if this chat
-        # is not currently selected, so switching conversations never loses messages.
         other = receiver if sender == self.username else sender
         if not other or other == self.username:
             return
@@ -156,7 +149,6 @@ class MainView(ctk.CTkFrame):
         self.notifications.configure(state="disabled")
 
     def show_system(self, text: str):
-        # Keep the existing method name for callers elsewhere in the client.
         self.show_notification(text)
 
     def _render_history(self, history: list[tuple[str, str, str]]):
@@ -185,8 +177,6 @@ class MainView(ctk.CTkFrame):
         self.messages.insert("end", f"[{timestamp}] {sender_label}: {text}\n")
 
     def _append(self, sender: str, text: str):
-        # Preserve the helper for any existing internal callers, but route system
-        # output to the notification panel rather than the selected chat history.
         if sender == "Hệ thống":
             self.show_notification(text)
             return
