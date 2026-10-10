@@ -7,7 +7,6 @@ from client.tcp_client import TCPClient
 
 logger = logging.getLogger(__name__)
 
-
 class EventHandler:
     """Routes queued network events to the GUI on Tk's main thread."""
 
@@ -41,7 +40,6 @@ class EventHandler:
         if callable(show_notification):
             show_notification(message)
         else:
-            # Compatibility with any alternate/older view implementation.
             self.view.show_system(message)
 
     def _dispatch(self, item: dict[str, Any]) -> None:
