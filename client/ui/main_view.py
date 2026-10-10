@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from datetime import datetime
 
-
 class MainView(ctk.CTkFrame):
     def __init__(self, master, username: str, on_send, on_logout, **kwargs):
         super().__init__(master, **kwargs)
@@ -10,7 +9,6 @@ class MainView(ctk.CTkFrame):
         self.on_logout = on_logout
         self.selected_user: str | None = None
         self._users: list[str] = []
-        # Keep a separate message history for the global room and each private chat.
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
@@ -99,7 +97,6 @@ class MainView(ctk.CTkFrame):
             self.select_global()
 
     def _refresh_user_buttons(self):
-        # Rebuild labels so unread counters and the selected conversation stay in sync.
         self.set_users(self._users)
 
     def _highlight_users(self):
@@ -112,8 +109,6 @@ class MainView(ctk.CTkFrame):
             self._append_entry(entry)
 
     def show_private_message(self, sender: str, receiver: str, text: str):
-        # The server sends a copy to both participants. Save it even if this chat
-        # is not currently selected, so switching conversations never loses messages.
         other = receiver if sender == self.username else sender
         if not other or other == self.username:
             return
