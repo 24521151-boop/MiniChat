@@ -7,7 +7,6 @@ from typing import Any
 from common.constants import BUFFER_SIZE, ENCODING, SERVER_IP, TCP_PORT
 from common.protocol import MsgType, create_message
 
-
 class TCPClient:
     """Small TCP client; network receiver threads never update the GUI directly."""
 
@@ -31,7 +30,6 @@ class TCPClient:
             sock.connect((self.host, self.port))
             self.username = username.strip()
             self.send(MsgType.LOGIN, payload=self.username)
-            # Read exactly the first response line so bytes after it remain for the receiver.
             data = bytearray()
             while b"\n" not in data:
                 chunk = sock.recv(1)
