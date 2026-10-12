@@ -9,11 +9,15 @@ from common.protocol import MsgType, create_message
 
 logger = logging.getLogger(__name__)
 
+
 class ClientManager:
-    """Thread-safe registry of authenticated clients and serialized socket writes."""
+    """Owns shared client sessions and their TCP/UDP presence state."""
 
     def __init__(self) -> None:
         self._clients: dict[str, socket.socket] = {}
+        self._udp_tokens: dict[str, str] = {}
+        self._udp_endpoints: dict[str, tuple[str, int]] = {}
+        self._udp_last_seen: dict[str, float] = {}
         self._lock = threading.RLock()
         self._send_lock = threading.Lock()
 
@@ -30,6 +34,9 @@ class ClientManager:
             if current is None or (conn is not None and current is not conn):
                 return False
             del self._clients[username]
+            self._udp_tokens.pop(username, None)
+            self._udp_endpoints.pop(username, None)
+            self._udp_last_seen.pop(username, None)
             return True
 
     def names(self) -> list[str]:
@@ -78,11 +85,66 @@ class ClientManager:
                 except OSError:
                     logger.info("Could not update user list for %s", name)
 
+    def register_udp_token(self, username: str, token: str) -> bool:
+        with self._lock:
+            if username not in self._clients:
+                return False
+            self._udp_tokens[username] = token
+            self._udp_endpoints.pop(username, None)
+            self._udp_last_seen.pop(username, None)
+            return True
+
+    def authenticate_udp_token(self, token: str) -> Optional[str]:
+        with self._lock:
+            for username, expected in self._udp_tokens.items():
+                if username in self._clients and expected and secrets_compare(expected, token):
+                    return username
+        return None
+
+    def register_udp_heartbeat(
+        self, token: str, address: tuple[str, int], now: float
+    ) -> Optional[str]:
+        with self._lock:
+            username = next(
+                (
+                    name for name, expected in self._udp_tokens.items()
+                    if name in self._clients and expected and secrets_compare(expected, token)
+                ),
+                None,
+            )
+            if username is None:
+                return None
+            self._udp_endpoints[username] = address
+            self._udp_last_seen[username] = now
+            return username
+
+    def get_udp_endpoint(self, username: str) -> Optional[tuple[str, int]]:
+        with self._lock:
+            return self._udp_endpoints.get(username)
+
+    def udp_recipients(self, exclude: Optional[str] = None) -> list[tuple[str, tuple[str, int]]]:
+        with self._lock:
+            return [
+                (username, endpoint)
+                for username, endpoint in self._udp_endpoints.items()
+                if username != exclude and username in self._clients
+            ]
+
+    def expired_udp_heartbeats(self, now: float, timeout: float) -> list[str]:
+        with self._lock:
+            return [
+                username for username, last_seen in self._udp_last_seen.items()
+                if username in self._clients and now - last_seen > timeout
+            ]
+
     def close_all(self) -> None:
         """Close every active socket during server shutdown."""
         with self._lock:
             clients = list(self._clients.items())
             self._clients.clear()
+            self._udp_tokens.clear()
+            self._udp_endpoints.clear()
+            self._udp_last_seen.clear()
         for username, conn in clients:
             try:
                 conn.shutdown(socket.SHUT_RDWR)
@@ -97,3 +159,8 @@ class ClientManager:
     def publish_user_list(self) -> None:
         payload = json.dumps(self.names(), ensure_ascii=False)
         self.broadcast(create_message(MsgType.USER_LIST, payload=payload))
+
+
+def secrets_compare(expected: str, supplied: str) -> bool:
+    import hmac
+    return hmac.compare_digest(expected, supplied)
