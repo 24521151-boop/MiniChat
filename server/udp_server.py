@@ -4,7 +4,7 @@ import threading
 
 from common.constants import BUFFER_SIZE, ENCODING, UDP_PORT
 from server.client_manager import ClientManager
-from server.message_handler import MessageHandler
+from server.tcp_message_handler import TCPMessageHandler
 from server.udp_message_handler import UDPMessageHandler
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class UDPServer:
     def __init__(
         self,
         clients: ClientManager,
-        tcp_handler: MessageHandler,
+        tcp_handler: TCPMessageHandler,
         host: str = "0.0.0.0",
         port: int = UDP_PORT,
     ) -> None:
