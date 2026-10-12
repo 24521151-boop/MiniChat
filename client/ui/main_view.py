@@ -11,6 +11,7 @@ class MainView(ctk.CTkFrame):
         self.on_typing = on_typing or (lambda _recipient, _typing: None)
         self.selected_user: str | None = None
         self._users: list[str] = []
+        self._online_users: set[str] = set()
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
@@ -111,7 +112,7 @@ class MainView(ctk.CTkFrame):
         self._render_history(self._global_history)
 
     def select_private(self, username: str):
-        if username == self.username:
+        if username == self.username or username not in self._online_users:
             return
         self._set_local_typing(False)
         self.selected_user = username
@@ -121,30 +122,37 @@ class MainView(ctk.CTkFrame):
         self._highlight_users()
         self._render_history(self._private_history.setdefault(username, []), private=True)
 
-    def set_users(self, names: list[str]):
-        self._users = names
+    def set_users(self, known_names: list[str], online_names: list[str] | None = None):
+        online_names = known_names if online_names is None else online_names
+        self._users = sorted(set(known_names), key=str.casefold)
+        self._online_users = set(online_names)
         for child in self.user_list.winfo_children():
             child.destroy()
-        for name in names:
+        for name in self._users:
             if name == self.username:
                 continue
+            online = name in self._online_users
             unread = self._unread_private.get(name, 0)
-            label = f"{name}  ({unread} mới)" if unread else name
+            status = "●" if online else "○"
+            label = f"{status}  {name}"
+            if unread:
+                label += f"  ({unread} mới)"
             button = ctk.CTkButton(
                 self.user_list,
                 text=label,
                 anchor="w",
                 fg_color=("gray80", "gray25") if name == self.selected_user else "transparent",
-                text_color=("gray10", "gray90"),
+                text_color=(("green", "lightgreen") if online else ("gray55", "gray60")),
                 hover_color=("gray85", "gray30"),
+                state="normal" if online else "disabled",
                 command=lambda n=name: self.select_private(n),
             )
             button.pack(fill="x", padx=3, pady=2)
-        if self.selected_user and self.selected_user not in names:
+        if self.selected_user and self.selected_user not in self._online_users:
             self.select_global()
 
     def _highlight_users(self):
-        self.set_users(self._users)
+        self.set_users(self._users, list(self._online_users))
 
     def show_global_message(self, sender: str, text: str):
         entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
@@ -209,7 +217,7 @@ class MainView(ctk.CTkFrame):
         self.notifications.configure(state="disabled")
 
     def _refresh_user_buttons(self):
-        self.set_users(self._users)
+        self.set_users(self._users, list(self._online_users))
 
     def _render_history(self, history: list[tuple[str, str, str]], private: bool = False):
         self.messages.configure(state="normal")
