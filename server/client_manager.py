@@ -109,7 +109,7 @@ class ClientManager:
             username = next(
                 (
                     name for name, expected in self._udp_tokens.items()
-                    if name in self._clients and expected and secrets_compare(expected, token)
+                    if name in self._clients and expected and hmac.compare_digest(expected, token)
                 ),
                 None,
             )
