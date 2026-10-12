@@ -59,7 +59,6 @@ MiniChat/
 ├── tests/
 │   ├── test_tcp_message_handler.py
 │   └── test_udp_message_handler.py
-├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
@@ -68,10 +67,10 @@ MiniChat/
 
 Yêu cầu Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
 
-### 1. Cài thư viện
+### 1. Cài đặt customtkinter
 
 ```powershell
-pip install -r requirements.txt
+pip install customtkinter
 ```
 
 ### 2. Khởi động Server
