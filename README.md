@@ -43,7 +43,7 @@ MiniChat/
 │   ├── main.py
 │   ├── tcp_server.py
 │   ├── client_manager.py
-│   ├── message_handler.py
+│   ├── tcp_message_handler.py
 │   ├── udp_server.py
 │   └── udp_message_handler.py
 ├── client/
