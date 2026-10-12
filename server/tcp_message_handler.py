@@ -124,10 +124,6 @@ class TCPMessageHandler:
         )
         logger.info("User %s disconnected", username)
 
-    @staticmethod
-    def _system(conn: socket.socket, message: str, event: str = "NOTICE") -> None:
+    def _system(self, conn: socket.socket, message: str, event: str = "NOTICE") -> None:
         raw = create_message(MsgType.SYSTEM, payload=json.dumps({"event": event, "message": message}, ensure_ascii=False))
-        try:
-            conn.sendall(raw.encode("utf-8"))
-        except OSError:
-            pass
+        self.clients.send_to_connection(conn, raw)

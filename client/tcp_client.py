@@ -91,6 +91,11 @@ class TCPClient:
                 sock.close()
             except OSError:
                 pass
+        receiver = self._receiver
+        if receiver is not None and receiver is not threading.current_thread():
+            receiver.join(timeout=1.0)
+            if not receiver.is_alive():
+                self._receiver = None
 
     def _receive_loop(self, initial: bytes = b"") -> None:
         buffer = bytearray(initial)
