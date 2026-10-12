@@ -16,7 +16,7 @@
 - Người đăng nhập sau nhận được lịch sử Chat chung trong phiên chạy hiện tại của Server.
 - Chat riêng 1–1; tin nhắn riêng chỉ được gửi đến hai người tham gia cuộc trò chuyện.
 - Danh sách người dùng do Server quản lý qua kết nối TCP.
-- UDP heartbeat định kỳ để phát hiện Client mất liên lạc bất thường; nếu heartbeat quá hạn, Server đóng phiên TCP tương ứng để danh sách người dùng được cập nhật theo luồng xử lý hiện có.
+- UDP heartbeat định kỳ để phát hiện Client mất liên lạc bất thường. `client_manager.py` là nơi quản lý trạng thái phiên dùng chung TCP/UDP và đóng phiên TCP khi heartbeat hết hạn; hai handler không duy trì danh sách người dùng độc lập.
 - Hiển thị trạng thái “đang nhập...” qua UDP cho Chat chung hoặc người nhận chat riêng.
 - Khu vực thông báo hệ thống riêng, không bị thay thế khi chuyển giữa Chat chung và Chat riêng.
 - Giao diện nhận tin nhắn trên luồng riêng để không làm treo cửa sổ.
@@ -57,7 +57,7 @@ MiniChat/
 │       ├── login_view.py
 │       └── main_view.py
 ├── tests/
-│   ├── test_message_handler.py
+│   ├── test_tcp_message_handler.py
 │   └── test_udp_message_handler.py
 ├── requirements.txt
 ├── .gitignore
