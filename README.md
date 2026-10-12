@@ -13,10 +13,12 @@
 
 - Đăng nhập bằng tên người dùng; từ chối tên trống, không hợp lệ hoặc đang được sử dụng.
 - Chat chung với những người đang kết nối.
-- Chat riêng 1-1.
+- Người đăng nhập sau nhận được lịch sử Chat chung trong phiên chạy hiện tại của Server.
+- Chat riêng 1–1; tin nhắn riêng chỉ được gửi đến hai người tham gia cuộc trò chuyện.
 - Danh sách người dùng do Server quản lý.
-- Giao diện đồ họa có thông báo hệ thống và xử lý nhận tin nhắn trên luồng riêng.
-- Không sử dụng UDP, không hỗ trợ gửi file và không có hệ thống trạng thái online/offline riêng biệt.
+- Khu vực thông báo hệ thống riêng, không bị thay thế khi chuyển giữa Chat chung và Chat riêng.
+- Giao diện nhận tin nhắn trên luồng riêng để không làm treo cửa sổ.
+- Không có chức năng tạo phòng, gửi file hoặc hệ thống tài khoản/mật khẩu.
 
 ## Công nghệ
 
@@ -48,6 +50,8 @@ MiniChat/
 │       ├── __init__.py
 │       ├── login_view.py
 │       └── main_view.py
+├── tests/
+│   └── test_message_handler.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -55,12 +59,12 @@ MiniChat/
 
 ## Cài đặt và chạy trên Windows
 
-Yêu cầu phiên bản trên Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
+Yêu cầu Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
 
-### 1. Tạo môi trường và cài thư viện
+### 1. Cài thư viện
 
 ```powershell
-pip install customtkinter
+pip install -r requirements.txt
 ```
 
 ### 2. Khởi động Server
@@ -92,18 +96,19 @@ Mở thêm cửa sổ Client bằng cách chạy lại lệnh để thử nhiề
 
 Không mở cổng này ra Internet công cộng; bản demo chưa có mã hóa TLS hay cơ chế xác thực tài khoản.
 
-
 ## Kiểm thử demo
 
 1. Khởi động Server.
 2. Mở hai hoặc ba Client với các tên khác nhau.
-3. Gửi tin nhắn trong phòng chat chung và xác nhận các Client khác nhận được.
-4. Chọn một người trong danh sách để chat riêng; xác nhận người không được chọn không nhận tin nhắn riêng.
-5. Thử đăng nhập hai lần với cùng một tên và thử tên không hợp lệ.
-6. Đóng một Client và kiểm tra danh sách người dùng được cập nhật.
+3. Gửi tin nhắn trong Chat chung và xác nhận các Client đang kết nối đều nhận được.
+4. Đăng nhập thêm một Client sau khi đã gửi vài tin nhắn; xác nhận Client mới nhận được lịch sử Chat chung.
+5. Chọn một người trong danh sách để chat riêng; xác nhận người không được chọn không nhận tin nhắn riêng.
+6. Thử đăng nhập hai lần với cùng một tên và thử tên không hợp lệ.
+7. Đóng một Client và kiểm tra danh sách người dùng được cập nhật.
 
 ## Giới hạn hiện tại
 
-- Tin nhắn chỉ tồn tại trong phiên chạy; không lưu lịch sử vào cơ sở dữ liệu.
+- Lịch sử Chat chung được giữ trong RAM, tối đa 500 tin nhắn trong lúc Server chạy; khởi động lại Server sẽ xóa lịch sử.
+- Lịch sử Chat riêng chỉ được giữ trong bộ nhớ của cửa sổ Client hiện tại, không được đồng bộ cho người đăng nhập sau.
 - Chưa có mã hóa TLS, tài khoản/mật khẩu hoặc gửi file.
 - Server dành cho bài tập và demo trong mạng tin cậy.
