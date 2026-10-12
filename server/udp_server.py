@@ -1,11 +1,13 @@
 import logging
 import socket
 import threading
+import time
 
 from common.constants import BUFFER_SIZE, ENCODING, UDP_PORT
 from server.client_manager import ClientManager
-from server.tcp_message_handler import TCPMessageHandler
 from server.udp_message_handler import UDPMessageHandler
+
+_HEARTBEAT_TIMEOUT = 18.0
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,6 @@ class UDPServer:
     def __init__(
         self,
         clients: ClientManager,
-        tcp_handler: TCPMessageHandler,
         host: str = "0.0.0.0",
         port: int = UDP_PORT,
     ) -> None:
@@ -24,7 +25,7 @@ class UDPServer:
         self._socket: socket.socket | None = None
         self._stop_event = threading.Event()
         self._send_lock = threading.Lock()
-        self.handler = UDPMessageHandler(clients, tcp_handler, self._send_to)
+        self.handler = UDPMessageHandler(clients, self._send_to)
 
     def start(self) -> None:
         if self._socket is not None:
@@ -40,7 +41,7 @@ class UDPServer:
                 try:
                     data, address = sock.recvfrom(BUFFER_SIZE)
                 except socket.timeout:
-                    self.handler.check_timeouts()
+                    self.clients.expire_udp_heartbeats(time.monotonic(), _HEARTBEAT_TIMEOUT)
                     continue
                 except OSError:
                     if self._stop_event.is_set():
