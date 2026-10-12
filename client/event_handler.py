@@ -62,9 +62,20 @@ class EventHandler:
             return
         if msg_type == MsgType.USER_LIST.value:
             try:
-                names = json.loads(item.get("payload", "[]"))
-                if isinstance(names, list) and all(isinstance(name, str) for name in names):
-                    self.view.set_users(names)
+                users = json.loads(item.get("payload", "[]"))
+                if isinstance(users, list) and all(isinstance(name, str) for name in users):
+                    self.view.set_users(users, users)
+                elif (
+                    isinstance(users, dict)
+                    and isinstance(users.get("known"), list)
+                    and isinstance(users.get("online"), list)
+                    and all(isinstance(name, str) for name in users["known"])
+                    and all(isinstance(name, str) for name in users["online"])
+                    and set(users["online"]).issubset(users["known"])
+                ):
+                    self.view.set_users(users["known"], users["online"])
+                else:
+                    logger.warning("Invalid user list received")
             except json.JSONDecodeError:
                 logger.warning("Invalid user list received")
             return
