@@ -2,7 +2,7 @@ import json
 import unittest
 
 from server.client_manager import ClientManager
-from server.message_handler import MessageHandler
+from server.tcp_message_handler import TCPMessageHandler
 from server.udp_message_handler import UDPMessageHandler
 
 
@@ -18,11 +18,9 @@ class UDPMessageHandlerTests(unittest.TestCase):
         self.bob = FakeSocket()
         self.clients.add("Alice", self.alice)
         self.clients.add("Bob", self.bob)
-        self.tcp_handler = MessageHandler(self.clients)
-        self.tcp_handler._udp_tokens.update({
-            "Alice": "alice-session-token",
-            "Bob": "bob-session-token",
-        })
+        self.tcp_handler = TCPMessageHandler(self.clients)
+        self.clients.register_udp_token("Alice", "alice-session-token")
+        self.clients.register_udp_token("Bob", "bob-session-token")
         self.sent = []
         self.handler = UDPMessageHandler(
             self.clients,
