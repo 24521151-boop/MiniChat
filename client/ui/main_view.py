@@ -158,6 +158,16 @@ class MainView(ctk.CTkFrame):
             else:
                 button.configure(**options)
 
+        for index in range(len(visible_names) - 2, -1, -1):
+            name = visible_names[index]
+            next_name = visible_names[index + 1]
+            self._user_buttons[name].pack_configure(
+                before=self._user_buttons[next_name],
+                fill="x",
+                padx=3,
+                pady=2,
+            )
+
         if self.selected_user and self.selected_user not in self._online_users:
             self.select_global()
 
