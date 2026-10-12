@@ -37,7 +37,6 @@ class ClientManager:
             if current is None or (conn is not None and current is not conn):
                 return False
             del self._clients[username]
-            self._send_locks.pop(current, None)
             self._udp_tokens.pop(username, None)
             self._udp_endpoints.pop(username, None)
             self._udp_last_seen.pop(username, None)
@@ -84,10 +83,9 @@ class ClientManager:
 
     def send_to_connection(self, conn: socket.socket, raw_message: str) -> bool:
         with self._lock:
-            if conn in self._clients.values():
+            send_lock = self._send_locks.get(conn)
+            if send_lock is None and conn in self._clients.values():
                 send_lock = self._send_lock_for_locked(conn)
-            else:
-                send_lock = None
         try:
             if send_lock is None:
                 conn.sendall(raw_message.encode(ENCODING))
@@ -221,12 +219,15 @@ class ClientManager:
             closed.append(username)
         return closed
 
+    def release_connection(self, conn: socket.socket) -> None:
+        with self._lock:
+            self._send_locks.pop(conn, None)
+
     def close_all(self) -> None:
         """Close every active socket during server shutdown."""
         with self._lock:
             clients = list(self._clients.items())
             self._clients.clear()
-            self._send_locks.clear()
             self._udp_tokens.clear()
             self._udp_endpoints.clear()
             self._udp_last_seen.clear()
