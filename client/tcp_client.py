@@ -18,6 +18,7 @@ class TCPClient:
         self._receiver: threading.Thread | None = None
         self._stop_event = threading.Event()
         self.username = ""
+        self.udp_token = ""
 
     def connect_and_login(self, username: str, timeout: float = 5.0) -> tuple[bool, str]:
         if self.socket is not None:
@@ -47,6 +48,7 @@ class TCPClient:
             if event != "LOGIN_OK":
                 self.close()
                 return False, message or "Đăng nhập thất bại."
+            self.udp_token = str(payload.get("udp_token", ""))
             sock.settimeout(None)
             self._receiver = threading.Thread(target=self._receive_loop, args=(remainder,), daemon=True, name="minichat-receiver")
             self._receiver.start()
