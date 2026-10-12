@@ -1,31 +1,30 @@
 import json
 import logging
 import socket
-import threading
 import time
 from typing import Callable
 
 from common.constants import ENCODING
 from server.client_manager import ClientManager
-from server.message_handler import MessageHandler
+from server.tcp_message_handler import TCPMessageHandler
 
 logger = logging.getLogger(__name__)
 _HEARTBEAT_TIMEOUT = 18.0
 
 
 class UDPMessageHandler:
+    """Handles UDP heartbeat and typing messages using shared client state."""
+
     def __init__(
         self,
         clients: ClientManager,
-        tcp_handler: MessageHandler,
+        tcp_handler: TCPMessageHandler,
         send_to: Callable[[bytes, tuple[str, int]], None],
     ) -> None:
         self.clients = clients
         self.tcp_handler = tcp_handler
         self.send_to = send_to
-        self._endpoints: dict[str, tuple[str, int]] = {}
-        self._last_seen: dict[str, float] = {}
-        self._lock = threading.RLock()
+        self._timed_out: set[str] = set()
 
     def handle_datagram(self, data: bytes, address: tuple[str, int]) -> None:
         if len(data) > 4096:
@@ -40,29 +39,31 @@ class UDPMessageHandler:
         token = packet.get("token")
         if not isinstance(token, str) or not token:
             return
-        username = self.tcp_handler.username_for_udp_token(token)
-        if username is None or self.clients.get(username) is None:
-            return
-
         packet_type = packet.get("type")
+
         if packet_type == "HEARTBEAT":
-            with self._lock:
-                self._endpoints[username] = address
-                self._last_seen[username] = time.monotonic()
+            username = self.clients.register_udp_heartbeat(token, address, time.monotonic())
+            if username is not None:
+                self._timed_out.discard(username)
             return
 
-        if packet_type != "TYPING":
+        username = self.clients.authenticate_udp_token(token)
+        if username is None:
             return
-        with self._lock:
-            endpoint = self._endpoints.get(username)
-            last_seen = self._last_seen.get(username)
-        if endpoint != address or last_seen is None or time.monotonic() - last_seen > _HEARTBEAT_TIMEOUT:
+        if self.clients.get_udp_endpoint(username) != address:
+            return
+        if not self.clients.udp_heartbeat_is_fresh(username, time.monotonic(), _HEARTBEAT_TIMEOUT):
+            return
+        if packet_type != "TYPING":
             return
 
         receiver = packet.get("receiver", "")
         is_typing = packet.get("typing")
         if not isinstance(receiver, str) or not isinstance(is_typing, bool):
             return
+        if receiver and receiver == username:
+            return
+
         notice = json.dumps({
             "type": "TYPING",
             "sender": username,
@@ -70,40 +71,31 @@ class UDPMessageHandler:
             "typing": is_typing,
         }, ensure_ascii=False, separators=(",", ":")).encode(ENCODING)
 
-        with self._lock:
-            if receiver:
-                recipients = [(receiver, self._endpoints.get(receiver))]
-            else:
-                recipients = [
-                    (name, endpoint)
-                    for name, endpoint in self._endpoints.items()
-                    if name != username
-                ]
-        for recipient, target in recipients:
-            if recipient == username or self.clients.get(recipient) is None or target is None:
-                continue
-            self.send_to(notice, target)
+        if receiver:
+            endpoint = self.clients.get_udp_endpoint(receiver)
+            if endpoint is not None and self.clients.get(receiver) is not None:
+                self.send_to(notice, endpoint)
+            return
+
+        for recipient, endpoint in self.clients.udp_recipients(exclude=username):
+            self.send_to(notice, endpoint)
 
     def check_timeouts(self) -> None:
         now = time.monotonic()
-        with self._lock:
-            stale = [
-                username for username, last_seen in self._last_seen.items()
-                if now - last_seen > _HEARTBEAT_TIMEOUT
-            ]
-            for username in stale:
-                self._last_seen.pop(username, None)
-                self._endpoints.pop(username, None)
-
-        for username in stale:
+        expired = self.clients.expired_udp_heartbeats(now, _HEARTBEAT_TIMEOUT)
+        for username in expired:
+            if username in self._timed_out:
+                continue
             conn = self.clients.get(username)
-            if conn is not None:
-                logger.info("UDP heartbeat timed out for %s; closing TCP session", username)
+            if conn is None:
+                self._timed_out.add(username)
+                continue
+            self._timed_out.add(username)
+            logger.info("UDP heartbeat timed out for %s; closing TCP session", username)
+            try:
+                conn.shutdown(socket.SHUT_RDWR)
+            except OSError:
                 try:
-                    conn.shutdown(socket.SHUT_RDWR)
+                    conn.close()
                 except OSError:
-                    try:
-                        conn.close()
-                    except OSError:
-                        pass
-
+                    pass
