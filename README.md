@@ -9,18 +9,20 @@
 
 **MiniChat** là ứng dụng nhắn tin nhiều người dùng theo mô hình **Client–Server**, viết bằng Python 3.12, sử dụng socket TCP cho tin nhắn, UDP cho heartbeat/trạng thái đang nhập, JSON và giao diện CustomTkinter.
 
-## Tính năng
+## Các tính năng chính của MiniChat
 
-- Đăng nhập bằng tên người dùng; từ chối tên trống, không hợp lệ hoặc đang được sử dụng.
-- Chat chung với những người đang kết nối.
-- Người đăng nhập sau nhận được lịch sử Chat chung trong phiên chạy hiện tại của Server.
-- Chat riêng 1–1; tin nhắn riêng chỉ được gửi đến hai người tham gia cuộc trò chuyện.
-- Danh sách người dùng do Server quản lý qua kết nối TCP.
-- UDP heartbeat định kỳ để phát hiện Client mất liên lạc bất thường. `client_manager.py` là nơi quản lý trạng thái phiên dùng chung TCP/UDP và đóng phiên TCP khi heartbeat hết hạn; hai handler không duy trì danh sách người dùng độc lập.
-- Hiển thị trạng thái “đang nhập...” qua UDP cho Chat chung hoặc người nhận chat riêng.
-- Khu vực thông báo hệ thống riêng, không bị thay thế khi chuyển giữa Chat chung và Chat riêng.
-- Giao diện nhận tin nhắn trên luồng riêng để không làm treo cửa sổ.
-- Không có chức năng tạo phòng, gửi file hoặc hệ thống tài khoản/mật khẩu.
+### 1. Đăng nhập
+- Người dùng đăng nhập bằng cách nhập tên người dùng.
+- Máy chủ kiểm tra và xử lý yêu cầu đăng nhập thông qua TCP.
+
+### 2. Giao tiếp bằng TCP
+- **Chat chung:** Cho phép người dùng gửi và nhận tin nhắn trong cuộc trò chuyện chung.
+- **Chat riêng:** Cho phép người dùng gửi và nhận tin nhắn riêng với một người dùng cụ thể.
+- **Đăng nhập:** Đảm bảo việc trao đổi yêu cầu đăng nhập và phản hồi giữa máy khách và máy chủ.
+
+### 3. Cập nhật trạng thái bằng UDP
+- **Trạng thái online/offline:** Theo dõi và cập nhật trạng thái trực tuyến của người dùng thông qua cơ chế gửi gói tin định kỳ (heartbeat).
+- **Trạng thái đang nhập:** Thông báo khi người dùng đang nhập tin nhắn, giúp những người tham gia cuộc trò chuyện nhận biết hoạt động của nhau.
 
 ## Công nghệ
 
