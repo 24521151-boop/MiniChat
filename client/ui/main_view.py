@@ -3,6 +3,9 @@ from datetime import datetime
 
 
 class MainView(ctk.CTkFrame):
+    _HISTORY_LIMIT = 500
+    _NOTIFICATION_LIMIT = 200
+
     def __init__(self, master, username: str, on_send, on_logout, on_typing=None, **kwargs):
         super().__init__(master, **kwargs)
         self.username = username
@@ -12,6 +15,7 @@ class MainView(ctk.CTkFrame):
         self.selected_user: str | None = None
         self._users: list[str] = []
         self._online_users: set[str] = set()
+        self._user_buttons: dict[str, ctk.CTkButton] = {}
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
@@ -125,34 +129,42 @@ class MainView(ctk.CTkFrame):
         online_names = known_names if online_names is None else online_names
         self._users = sorted(set(known_names), key=str.casefold)
         self._online_users = set(online_names)
-        for child in self.user_list.winfo_children():
-            child.destroy()
-        for name in self._users:
-            if name == self.username:
-                continue
+        visible_names = {name for name in self._users if name != self.username}
+
+        for name in set(self._user_buttons) - visible_names:
+            self._user_buttons.pop(name).destroy()
+
+        for name in visible_names:
             online = name in self._online_users
             unread = self._unread_private.get(name, 0)
-            status = "●" if online else "○"
-            label = f"{status}  {name}"
+            label = f"{'●' if online else '○'}  {name}"
             if unread:
                 label += f"  ({unread} mới)"
-            button = ctk.CTkButton(
-                self.user_list,
-                text=label,
-                anchor="w",
-                fg_color=("gray80", "gray25") if name == self.selected_user else "transparent",
-                text_color=(("green", "lightgreen") if online else ("gray55", "gray60")),
-                hover_color=("gray85", "gray30"),
-                state="normal" if online else "disabled",
-                command=lambda n=name: self.select_private(n),
-            )
-            button.pack(fill="x", padx=3, pady=2)
+            options = {
+                "text": label,
+                "anchor": "w",
+                "fg_color": ("gray80", "gray25") if name == self.selected_user else "transparent",
+                "text_color": ("green", "lightgreen") if online else ("gray55", "gray60"),
+                "hover_color": ("gray85", "gray30"),
+                "state": "normal" if online else "disabled",
+                "command": lambda n=name: self.select_private(n),
+            }
+            button = self._user_buttons.get(name)
+            if button is None:
+                button = ctk.CTkButton(self.user_list, **options)
+                button.pack(fill="x", padx=3, pady=2)
+                self._user_buttons[name] = button
+            else:
+                button.configure(**options)
+
         if self.selected_user and self.selected_user not in self._online_users:
             self.select_global()
 
     def show_global_message(self, sender: str, text: str):
         entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
         self._global_history.append(entry)
+        if len(self._global_history) > self._HISTORY_LIMIT:
+            del self._global_history[:-self._HISTORY_LIMIT]
         if self.selected_user is None:
             self._append_entry(entry)
 
@@ -163,6 +175,8 @@ class MainView(ctk.CTkFrame):
         entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
         history = self._private_history.setdefault(other, [])
         history.append(entry)
+        if len(history) > self._HISTORY_LIMIT:
+            del history[:-self._HISTORY_LIMIT]
 
         if self.selected_user == other:
             self._append_entry(entry, private=True)
@@ -207,6 +221,9 @@ class MainView(ctk.CTkFrame):
         entry = f"[{timestamp}] {text}"
         self.notifications.configure(state="normal")
         self.notifications.insert("end", entry + "\n")
+        line_count = int(self.notifications.index("end-1c").split(".")[0])
+        if line_count > self._NOTIFICATION_LIMIT + 1:
+            self.notifications.delete("1.0", "2.0")
         self.notifications.see("end")
         self.notifications.configure(state="disabled")
 
