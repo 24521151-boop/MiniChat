@@ -48,12 +48,7 @@ class TCPClient:
                 self.close()
                 return False, message or "Đăng nhập thất bại."
             sock.settimeout(None)
-            self._receiver = threading.Thread(
-                target=self._receive_loop,
-                args=(remainder,),
-                daemon=True,
-                name="minichat-receiver",
-            )
+            self._receiver = threading.Thread(target=self._receive_loop, args=(remainder,), daemon=True, name="minichat-receiver")
             self._receiver.start()
             return True, message or "Đăng nhập thành công."
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, ConnectionError) as exc:
@@ -73,15 +68,6 @@ class TCPClient:
 
     def send_private(self, recipient: str, text: str) -> None:
         self.send(MsgType.CHAT_PRIVATE, receiver=recipient, payload=text)
-
-    def send_room(self, room_name: str, text: str) -> None:
-        self.send(MsgType.CHAT_ROOM, receiver=room_name, payload=text)
-
-    def create_room(self, room_name: str) -> None:
-        self.send(MsgType.CREATE_ROOM, payload=room_name)
-
-    def add_member(self, room_name: str, username: str) -> None:
-        self.send(MsgType.ADD_MEMBER, receiver=username, payload=room_name)
 
     def logout(self) -> None:
         try:
