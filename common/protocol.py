@@ -10,13 +10,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class MsgType(str, Enum):
     LOGIN = "LOGIN"
     LOGOUT = "LOGOUT"
     USER_LIST = "USER_LIST"
     CHAT_ALL = "CHAT_ALL"
     CHAT_PRIVATE = "CHAT_PRIVATE"
+    CHAT_ROOM = "CHAT_ROOM"
+    ROOM_LIST = "ROOM_LIST"
+    CREATE_ROOM = "CREATE_ROOM"
+    ADD_MEMBER = "ADD_MEMBER"
     SYSTEM = "SYSTEM"
+
 
 @dataclass(frozen=True)
 class Message:
@@ -24,6 +30,7 @@ class Message:
     sender: str = ""
     receiver: str = ""
     payload: str = ""
+
 
 def create_message(
     msg_type: MsgType | str,
@@ -48,6 +55,7 @@ def create_message(
     }
 
     return json.dumps(data, ensure_ascii=False) + "\n"
+
 
 def parse_message(message_str: str) -> Optional[Message]:
     try:
