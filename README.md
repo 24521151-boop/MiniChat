@@ -5,28 +5,28 @@
 ![Protocol](https://img.shields.io/badge/Network-TCP%20%2B%20UDP-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-## Giới thiệu
+## I. Giới thiệu
 
 **MiniChat** là ứng dụng nhắn tin nhiều người dùng theo mô hình **Client–Server**, viết bằng Python 3.12, sử dụng socket TCP cho tin nhắn, UDP cho heartbeat/trạng thái đang nhập, JSON và giao diện CustomTkinter.
 
-## Các tính năng chính của MiniChat
+## 1. Các tính năng chính của MiniChat
 
-### 1. Giao tiếp bằng TCP
+### a. Giao tiếp bằng TCP
 - **Chat chung:** Cho phép người dùng gửi và nhận tin nhắn trong cuộc trò chuyện chung.
 - **Chat riêng:** Cho phép người dùng gửi và nhận tin nhắn riêng với một người dùng cụ thể.
 - **Đăng nhập:** Đảm bảo việc trao đổi yêu cầu đăng nhập và phản hồi giữa máy khách và máy chủ.
 
-### 2. Cập nhật trạng thái bằng UDP
+### b. Cập nhật trạng thái bằng UDP
 - **Trạng thái online/offline:** Theo dõi và cập nhật trạng thái trực tuyến của người dùng thông qua cơ chế gửi gói tin định kỳ (heartbeat).
 - **Trạng thái đang nhập:** Thông báo khi người dùng đang nhập tin nhắn, giúp những người tham gia cuộc trò chuyện nhận biết hoạt động của nhau.
 
-## Công cụ và thư viện
+## 2. Công cụ và thư viện
 
-- Ngôn ngữ lập trình: Python 3.12
-- Giao diện người dùng (GUI): Thư viện CustomTkinter
-- Giao thức và Kỹ thuật: Socket (TCP/UDP), Multi-threading (Xử lý đa luồng), định dạng dữ liệu JSON.
+- **Ngôn ngữ lập trình:** Python 3.12
+- **Giao diện người dùng (GUI):** Thư viện CustomTkinter
+- **Giao thức và Kỹ thuật:** Socket (TCP/UDP), Multi-threading (Xử lý đa luồng), định dạng dữ liệu JSON.
 
-## Cấu trúc thư mục
+## 3. Cấu trúc thư mục
 
 ```text
 MiniChat/
