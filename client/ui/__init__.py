@@ -1,1 +1,1 @@
-"""CustomTkinter user interface package."""
+"""Gói giao diện người dùng CustomTkinter."""
