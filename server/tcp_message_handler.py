@@ -88,15 +88,20 @@ class TCPMessageHandler:
             if not text:
                 return username
             if recipient == username:
-                self._system(conn, "Bạn không thể gửi tin nhắn riêng cho chính mình.", event="ERROR")
+                logger.debug("Rejected private message from %s to self", username)
                 return username
             if not self.clients.send(recipient, create_message(MsgType.CHAT_PRIVATE, sender=username, receiver=recipient, payload=text)):
-                self._system(conn, f"Người dùng {recipient or '(chưa chọn)'} không tồn tại hoặc đã ngắt kết nối.", event="ERROR")
+                error = (
+                    "Không thể gửi tin nhắn riêng vì chưa chọn người nhận."
+                    if not recipient
+                    else "Không thể gửi tin nhắn riêng vì người nhận hiện không online."
+                )
+                self._system(conn, error, event="ERROR")
                 return username
             self.clients.send(username, create_message(MsgType.CHAT_PRIVATE, sender=username, receiver=recipient, payload=text))
             return username
 
-        self._system(conn, "Loại thông điệp không được hỗ trợ.", event="ERROR")
+        logger.warning("Unsupported TCP message type %s from %s", message.msg_type.value, username)
         return username
 
     def _append_history(self, history: list[tuple[str, str]], entry: tuple[str, str]) -> None:
