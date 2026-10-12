@@ -13,6 +13,8 @@ _USERNAME_RE = re.compile(r"^[\w.-]{1,24}$", re.UNICODE)
 class MessageHandler:
     def __init__(self, clients: ClientManager) -> None:
         self.clients = clients
+        self._global_history: list[tuple[str, str]] = []
+        self._history_limit = 500
 
     def handle(self, conn: socket.socket, username: str | None, message: Message) -> str | None:
         if message.msg_type == MsgType.LOGIN:
@@ -27,6 +29,8 @@ class MessageHandler:
                 self._system(conn, "Tên người dùng đã được sử dụng.", event="LOGIN_ERROR")
                 return None
             self.clients.send(requested, create_message(MsgType.SYSTEM, payload=json.dumps({"event":"LOGIN_OK", "message":f"Xin chào {requested}!"}, ensure_ascii=False)))
+            for history_sender, history_text in self._global_history:
+                self.clients.send(requested, create_message(MsgType.CHAT_ALL, sender=history_sender, payload=history_text))
             self.clients.publish_user_list()
             self.clients.broadcast(create_message(MsgType.SYSTEM, payload=json.dumps({"event":"NOTICE", "message":f"{requested} đã tham gia phòng chat."}, ensure_ascii=False)), exclude=requested)
             logger.info("User %s connected", requested)
@@ -44,6 +48,9 @@ class MessageHandler:
             text = message.payload.strip()
             if not text:
                 return username
+            self._global_history.append((username, text))
+            if len(self._global_history) > self._history_limit:
+                del self._global_history[:-self._history_limit]
             outgoing = create_message(MsgType.CHAT_ALL, sender=username, payload=text)
             self.clients.broadcast(outgoing)
             return username
