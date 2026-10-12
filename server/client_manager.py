@@ -123,6 +123,18 @@ class ClientManager:
         with self._lock:
             return self._udp_endpoints.get(username)
 
+    def is_valid_udp_endpoint(
+        self, username: str, address: tuple[str, int], now: float, timeout: float = 18.0
+    ) -> bool:
+        with self._lock:
+            last_seen = self._udp_last_seen.get(username)
+            return (
+                username in self._clients
+                and self._udp_endpoints.get(username) == address
+                and last_seen is not None
+                and now - last_seen <= timeout
+            )
+
     def udp_recipients(self, exclude: Optional[str] = None) -> list[tuple[str, tuple[str, int]]]:
         with self._lock:
             return [
