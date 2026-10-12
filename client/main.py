@@ -3,6 +3,7 @@ import customtkinter as ctk
 
 from client.event_handler import EventHandler
 from client.tcp_client import TCPClient
+from client.udp_client import UDPClient
 from client.ui.login_view import LoginView
 from client.ui.main_view import MainView
 
@@ -18,6 +19,7 @@ class MiniChatApp(ctk.CTk):
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
         self.client: TCPClient | None = None
+        self.udp_client: UDPClient | None = None
         self.login_view: LoginView | None = None
         self.main_view: MainView | None = None
         self.event_handler: EventHandler | None = None
@@ -49,12 +51,24 @@ class MiniChatApp(ctk.CTk):
                 self.login_view.show_error(message)
             return
         self.client = client
+        if client.udp_token:
+            self.udp_client = UDPClient(client.udp_token, host=client.host)
+            self.udp_client.start()
+        else:
+            self.udp_client = None
+            logging.warning("Server login response did not include a UDP session token; typing status is disabled.")
         if self.login_view:
             self.login_view.destroy()
             self.login_view = None
-        self.main_view = MainView(self, username, self._send_message, self._logout)
+        self.main_view = MainView(
+            self,
+            username,
+            self._send_message,
+            self._logout,
+            self._send_typing,
+        )
         self.main_view.pack(fill="both", expand=True)
-        self.event_handler = EventHandler(client, self.main_view, self._connection_lost)
+        self.event_handler = EventHandler(client, self.main_view, self._connection_lost, self.udp_client)
         self.event_handler.poll()
 
     def _send_message(self, recipient: str | None, text: str):
@@ -65,16 +79,27 @@ class MiniChatApp(ctk.CTk):
         else:
             self.client.send_global(text)
 
+    def _send_typing(self, recipient: str, is_typing: bool):
+        if self.udp_client:
+            self.udp_client.send_typing(recipient, is_typing)
+
+    def _close_udp(self):
+        if self.udp_client:
+            self.udp_client.close()
+            self.udp_client = None
+
     def _logout(self):
         if self.event_handler:
             self.event_handler.stop()
             self.event_handler = None
+        self._close_udp()
         if self.client:
             self.client.logout()
             self.client = None
         self.show_login()
 
     def _connection_lost(self):
+        self._close_udp()
         if self.client:
             self.client.close()
             self.client = None
@@ -84,6 +109,7 @@ class MiniChatApp(ctk.CTk):
     def _on_close(self):
         if self.event_handler:
             self.event_handler.stop()
+        self._close_udp()
         if self.client:
             self.client.logout()
         self.destroy()

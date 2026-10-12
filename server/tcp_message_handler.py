@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import secrets
 import socket
 import threading
 
@@ -11,7 +12,9 @@ logger = logging.getLogger(__name__)
 _USERNAME_RE = re.compile(r"^[\w.-]{1,24}$", re.UNICODE)
 
 
-class MessageHandler:
+class TCPMessageHandler:
+    """Handles TCP login/logout and chat business logic."""
+
     def __init__(self, clients: ClientManager) -> None:
         self.clients = clients
         self._global_history: list[tuple[str, str]] = []
@@ -30,7 +33,20 @@ class MessageHandler:
             if not self.clients.add(requested, conn):
                 self._system(conn, "Tên người dùng đã được sử dụng.", event="LOGIN_ERROR")
                 return None
-            self.clients.send(requested, create_message(MsgType.SYSTEM, payload=json.dumps({"event": "LOGIN_OK", "message": f"Xin chào {requested}!"}, ensure_ascii=False)))
+
+            udp_token = secrets.token_urlsafe(32)
+            self.clients.register_udp_token(requested, udp_token)
+            self.clients.send(
+                requested,
+                create_message(
+                    MsgType.SYSTEM,
+                    payload=json.dumps({
+                        "event": "LOGIN_OK",
+                        "message": f"Xin chào {requested}!",
+                        "udp_token": udp_token,
+                    }, ensure_ascii=False),
+                ),
+            )
             with self._lock:
                 history = list(self._global_history)
             for history_sender, history_text in history:

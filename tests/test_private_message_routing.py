@@ -3,7 +3,7 @@ import unittest
 
 from common.protocol import Message, MsgType
 from server.client_manager import ClientManager
-from server.message_handler import MessageHandler
+from server.tcp_message_handler import TCPMessageHandler
 
 
 class FakeSocket:
@@ -25,7 +25,7 @@ class FakeSocket:
 class PrivateMessageRoutingTests(unittest.TestCase):
     def setUp(self):
         self.clients = ClientManager()
-        self.handler = MessageHandler(self.clients)
+        self.handler = TCPMessageHandler(self.clients)
         self.alice = FakeSocket()
         self.bob = FakeSocket()
         self.charlie = FakeSocket()

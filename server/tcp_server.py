@@ -5,7 +5,7 @@ import threading
 from common.constants import BUFFER_SIZE, ENCODING, TCP_PORT
 from common.protocol import parse_message
 from server.client_manager import ClientManager
-from server.message_handler import MessageHandler
+from server.tcp_message_handler import TCPMessageHandler
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class TCPServer:
         self.host = host
         self.port = port
         self.clients = ClientManager()
-        self.handler = MessageHandler(self.clients)
+        self.handler = TCPMessageHandler(self.clients)
         self._server_socket: socket.socket | None = None
         self._stop_event = threading.Event()
         self._threads: set[threading.Thread] = set()
