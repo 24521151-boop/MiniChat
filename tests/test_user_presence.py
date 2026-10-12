@@ -12,6 +12,12 @@ class FakeSocket:
     def sendall(self, data: bytes):
         self.sent.append(data)
 
+    def shutdown(self, _how):
+        pass
+
+    def close(self):
+        pass
+
 
 class UserPresenceTests(unittest.TestCase):
     def setUp(self):
