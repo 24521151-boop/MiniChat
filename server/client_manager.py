@@ -21,7 +21,7 @@ class ClientManager:
         self._udp_endpoints: dict[str, tuple[str, int]] = {}
         self._udp_last_seen: dict[str, float] = {}
         self._lock = threading.RLock()
-        self._send_lock = threading.Lock()
+        self._send_locks: dict[socket.socket, threading.Lock] = {}
 
     def add(self, username: str, conn: socket.socket) -> bool:
         with self._lock:
@@ -37,6 +37,7 @@ class ClientManager:
             if current is None or (conn is not None and current is not conn):
                 return False
             del self._clients[username]
+            self._send_locks.pop(current, None)
             self._udp_tokens.pop(username, None)
             self._udp_endpoints.pop(username, None)
             self._udp_last_seen.pop(username, None)
@@ -60,27 +61,56 @@ class ClientManager:
         with self._lock:
             return self._clients.get(username)
 
+    def _send_lock_for_locked(self, conn: socket.socket) -> threading.Lock:
+        lock = self._send_locks.get(conn)
+        if lock is None:
+            lock = threading.Lock()
+            self._send_locks[conn] = lock
+        return lock
+
     def send(self, username: str, raw_message: str) -> bool:
         with self._lock:
             conn = self._clients.get(username)
-        if conn is None:
-            return False
+            if conn is None:
+                return False
+            send_lock = self._send_lock_for_locked(conn)
         try:
-            with self._send_lock:
+            with send_lock:
                 conn.sendall(raw_message.encode(ENCODING))
             return True
         except OSError:
             logger.info("Could not send message to %s", username)
             return False
 
+    def send_to_connection(self, conn: socket.socket, raw_message: str) -> bool:
+        with self._lock:
+            if conn in self._clients.values():
+                send_lock = self._send_lock_for_locked(conn)
+            else:
+                send_lock = None
+        try:
+            if send_lock is None:
+                conn.sendall(raw_message.encode(ENCODING))
+            else:
+                with send_lock:
+                    conn.sendall(raw_message.encode(ENCODING))
+            return True
+        except OSError:
+            logger.info("Could not send message to connection")
+            return False
+
     def broadcast(self, raw_message: str, exclude: Optional[str] = None) -> None:
         with self._lock:
-            recipients = [(name, conn) for name, conn in self._clients.items() if name != exclude]
+            recipients = [
+                (name, conn, self._send_lock_for_locked(conn))
+                for name, conn in self._clients.items()
+                if name != exclude
+            ]
         failed: list[tuple[str, socket.socket]] = []
         data = raw_message.encode(ENCODING)
-        for name, conn in recipients:
+        for name, conn, send_lock in recipients:
             try:
-                with self._send_lock:
+                with send_lock:
                     conn.sendall(data)
             except OSError:
                 failed.append((name, conn))
@@ -90,10 +120,13 @@ class ClientManager:
             names_payload = self._user_list_payload()
             list_message = create_message(MsgType.USER_LIST, payload=names_payload).encode(ENCODING)
             with self._lock:
-                remaining = list(self._clients.items())
-            for name, conn in remaining:
+                remaining = [
+                    (name, conn, self._send_lock_for_locked(conn))
+                    for name, conn in self._clients.items()
+                ]
+            for name, conn, send_lock in remaining:
                 try:
-                    with self._send_lock:
+                    with send_lock:
                         conn.sendall(list_message)
                 except OSError:
                     logger.info("Could not update user list for %s", name)
@@ -193,6 +226,7 @@ class ClientManager:
         with self._lock:
             clients = list(self._clients.items())
             self._clients.clear()
+            self._send_locks.clear()
             self._udp_tokens.clear()
             self._udp_endpoints.clear()
             self._udp_last_seen.clear()
