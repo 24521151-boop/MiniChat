@@ -9,24 +9,24 @@
 
 **MiniChat** là ứng dụng nhắn tin nhiều người dùng theo mô hình **Client–Server**, viết bằng Python 3.12, sử dụng socket TCP cho tin nhắn, UDP cho heartbeat/trạng thái đang nhập, JSON và giao diện CustomTkinter.
 
-## 1. Các tính năng chính của MiniChat
+### 1. Các tính năng chính của MiniChat
 
-### a. Giao tiếp bằng TCP
+#### a. Giao tiếp bằng TCP
 - **Chat chung:** Cho phép người dùng gửi và nhận tin nhắn trong cuộc trò chuyện chung.
 - **Chat riêng:** Cho phép người dùng gửi và nhận tin nhắn riêng với một người dùng cụ thể.
 - **Đăng nhập:** Đảm bảo việc trao đổi yêu cầu đăng nhập và phản hồi giữa máy khách và máy chủ.
 
-### b. Cập nhật trạng thái bằng UDP
+#### b. Cập nhật trạng thái bằng UDP
 - **Trạng thái online/offline:** Theo dõi và cập nhật trạng thái trực tuyến của người dùng thông qua cơ chế gửi gói tin định kỳ (heartbeat).
 - **Trạng thái đang nhập:** Thông báo khi người dùng đang nhập tin nhắn, giúp những người tham gia cuộc trò chuyện nhận biết hoạt động của nhau.
 
-## 2. Công cụ và thư viện
+### 2. Công cụ và thư viện
 
 - **Ngôn ngữ lập trình:** Python 3.12
 - **Giao diện người dùng (GUI):** Thư viện CustomTkinter
 - **Giao thức và Kỹ thuật:** Socket (TCP/UDP), Multi-threading (Xử lý đa luồng), định dạng dữ liệu JSON.
 
-## 3. Cấu trúc thư mục
+### 3. Cấu trúc thư mục
 
 ```text
 MiniChat/
@@ -59,7 +59,7 @@ MiniChat/
 └── README.md
 ```
 
-## Cài đặt và chạy trên Windows
+## II. Cài đặt và chạy trên Windows
 
 Yêu cầu Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
 
@@ -89,7 +89,7 @@ python -m client.main
 
 Mở thêm cửa sổ Client bằng cách chạy lại lệnh để thử nhiều người dùng. Khi thử trên cùng máy, giữ `SERVER_IP = "127.0.0.1"` trong `common/constants.py`.
 
-## Chạy qua mạng LAN
+## III. Chạy qua mạng LAN
 
 1. Khởi động Server trên máy chủ và xác định địa chỉ IPv4 nội bộ của máy đó.
 2. Trên các máy Client, sửa `SERVER_IP` trong `common/constants.py` thành IPv4 của máy chạy Server, ví dụ `192.168.1.10`.
