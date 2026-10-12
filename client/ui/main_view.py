@@ -39,14 +39,21 @@ class MainView(ctk.CTkFrame):
         self.message_entry.bind("<Return>", lambda _event: self.send_message())
         ctk.CTkButton(entry_row, text="Gửi", width=80, height=40, command=self.send_message).grid(row=0, column=1)
 
-        sidebar = ctk.CTkFrame(self, width=210, corner_radius=12)
+        sidebar = ctk.CTkFrame(self, width=250, corner_radius=12)
         sidebar.grid(row=1, column=1, sticky="nsew", padx=(6, 12), pady=12)
         sidebar.grid_propagate(False)
-        ctk.CTkLabel(sidebar, text="Người dùng", font=ctk.CTkFont(size=16, weight="bold")).pack(anchor="w", padx=14, pady=(14, 4))
-        ctk.CTkButton(sidebar, text="Chat chung", anchor="w", command=self.select_global).pack(fill="x", padx=10, pady=4)
+        sidebar.grid_columnconfigure(0, weight=1)
+        sidebar.grid_rowconfigure(3, weight=3)
+        sidebar.grid_rowconfigure(5, weight=2)
+        ctk.CTkLabel(sidebar, text="Người dùng", font=ctk.CTkFont(size=16, weight="bold")).grid(row=0, column=0, sticky="w", padx=14, pady=(14, 4))
+        ctk.CTkButton(sidebar, text="Chat chung", anchor="w", command=self.select_global).grid(row=1, column=0, sticky="ew", padx=10, pady=4)
         self.user_list = ctk.CTkScrollableFrame(sidebar, label_text="Chọn người để chat riêng")
-        self.user_list.pack(fill="both", expand=True, padx=8, pady=(4, 10))
-        self._append("Hệ thống", "Bạn đã đăng nhập. Hãy chọn phòng chat để bắt đầu.")
+        self.user_list.grid(row=3, column=0, sticky="nsew", padx=8, pady=(4, 8))
+        ctk.CTkLabel(sidebar, text="Thông báo", font=ctk.CTkFont(size=15, weight="bold")).grid(row=4, column=0, sticky="w", padx=12, pady=(4, 2))
+        self.notifications = ctk.CTkTextbox(sidebar, height=130, wrap="word", state="disabled")
+        self.notifications.grid(row=5, column=0, sticky="nsew", padx=8, pady=(2, 10))
+        self._notification_history: list[str] = []
+        self.show_system("Bạn đã đăng nhập. Hãy chọn phòng chat để bắt đầu.")
 
     def send_message(self):
         text = self.message_entry.get().strip()
@@ -123,8 +130,16 @@ class MainView(ctk.CTkFrame):
             self._refresh_user_buttons()
 
     def show_system(self, text: str):
-        if text:
-            self._append("Hệ thống", text)
+        if not text:
+            return
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        entry = f"[{timestamp}] {text}"
+        self._notification_history.append(entry)
+        self._notification_history = self._notification_history[-100:]
+        self.notifications.configure(state="normal")
+        self.notifications.insert("end", entry + "\\n")
+        self.notifications.see("end")
+        self.notifications.configure(state="disabled")
 
     def _render_history(self, history: list[tuple[str, str, str]]):
         self.messages.configure(state="normal")
