@@ -1,1 +1,1 @@
-"""Shared protocol and configuration for MiniChat."""
+"""Giao thức và cấu hình dùng chung cho MiniChat."""
