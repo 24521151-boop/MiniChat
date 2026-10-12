@@ -143,7 +143,7 @@ class MainView(ctk.CTkFrame):
                 anchor="w",
                 fg_color=("gray80", "gray25") if name == self.selected_user else "transparent",
                 text_color=(("green", "lightgreen") if online else ("gray55", "gray60")),
-                hover_color=("gray85", "gray30") if online else ("transparent", "transparent"),
+                hover_color=("gray85", "gray30"),
                 state="normal" if online else "disabled",
                 command=lambda n=name: self.select_private(n),
             )
