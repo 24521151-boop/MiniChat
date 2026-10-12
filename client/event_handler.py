@@ -37,7 +37,7 @@ class EventHandler:
             while True:
                 try:
                     item = self.udp_client.incoming.get_nowait()
-                except Exception:
+                except Empty:
                     break
                 if item.get("type") == "TYPING":
                     self.view.show_typing(
