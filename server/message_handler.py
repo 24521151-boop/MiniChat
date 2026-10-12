@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import secrets
 import socket
 import threading
 
@@ -17,6 +18,14 @@ class MessageHandler:
         self._global_history: list[tuple[str, str]] = []
         self._history_limit = 500
         self._lock = threading.RLock()
+        self._udp_tokens: dict[str, str] = {}
+
+    def username_for_udp_token(self, token: str) -> str | None:
+        with self._lock:
+            for username, expected_token in self._udp_tokens.items():
+                if secrets.compare_digest(expected_token, token):
+                    return username
+        return None
 
     def handle(self, conn: socket.socket, username: str | None, message: Message) -> str | None:
         if message.msg_type == MsgType.LOGIN:
@@ -30,7 +39,20 @@ class MessageHandler:
             if not self.clients.add(requested, conn):
                 self._system(conn, "Tên người dùng đã được sử dụng.", event="LOGIN_ERROR")
                 return None
-            self.clients.send(requested, create_message(MsgType.SYSTEM, payload=json.dumps({"event": "LOGIN_OK", "message": f"Xin chào {requested}!"}, ensure_ascii=False)))
+            udp_token = secrets.token_urlsafe(32)
+            with self._lock:
+                self._udp_tokens[requested] = udp_token
+            self.clients.send(
+                requested,
+                create_message(
+                    MsgType.SYSTEM,
+                    payload=json.dumps({
+                        "event": "LOGIN_OK",
+                        "message": f"Xin chào {requested}!",
+                        "udp_token": udp_token,
+                    }, ensure_ascii=False),
+                ),
+            )
             with self._lock:
                 history = list(self._global_history)
             for history_sender, history_text in history:
@@ -91,6 +113,8 @@ class MessageHandler:
     def disconnect(self, username: str, conn: socket.socket) -> None:
         if not self.clients.remove(username, conn):
             return
+        with self._lock:
+            self._udp_tokens.pop(username, None)
         self.clients.publish_user_list()
         self.clients.broadcast(
             create_message(
