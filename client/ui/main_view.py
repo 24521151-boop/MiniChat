@@ -3,17 +3,22 @@ from datetime import datetime
 
 
 class MainView(ctk.CTkFrame):
-    def __init__(self, master, username: str, on_send, on_logout, **kwargs):
+    def __init__(self, master, username: str, on_send, on_logout, on_typing=None, **kwargs):
         super().__init__(master, **kwargs)
         self.username = username
         self.on_send = on_send
         self.on_logout = on_logout
+        self.on_typing = on_typing or (lambda _recipient, _typing: None)
         self.selected_user: str | None = None
         self._users: list[str] = []
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
         self._notification_history: list[str] = []
+        self._typing_after_id = None
+        self._typing_active = False
+        self._typing_display_after_id = None
+        self._typing_display_text = ""
 
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=1, minsize=250)
@@ -29,17 +34,20 @@ class MainView(ctk.CTkFrame):
         chat = ctk.CTkFrame(self, corner_radius=12)
         chat.grid(row=1, column=0, sticky="nsew", padx=(12, 6), pady=12)
         chat.grid_columnconfigure(0, weight=1)
-        chat.grid_rowconfigure(1, weight=1)
+        chat.grid_rowconfigure(2, weight=1)
         self.chat_title = ctk.CTkLabel(chat, text="Chat chung", anchor="w", font=ctk.CTkFont(size=16, weight="bold"))
-        self.chat_title.grid(row=0, column=0, sticky="ew", padx=14, pady=(12, 4))
+        self.chat_title.grid(row=0, column=0, sticky="ew", padx=14, pady=(12, 2))
+        self.typing_label = ctk.CTkLabel(chat, text="", anchor="w", text_color=("gray45", "gray65"))
+        self.typing_label.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 2))
         self.messages = ctk.CTkTextbox(chat, wrap="word", state="disabled")
-        self.messages.grid(row=1, column=0, sticky="nsew", padx=12, pady=8)
+        self.messages.grid(row=2, column=0, sticky="nsew", padx=12, pady=8)
         entry_row = ctk.CTkFrame(chat, fg_color="transparent")
-        entry_row.grid(row=2, column=0, sticky="ew", padx=12, pady=(4, 12))
+        entry_row.grid(row=3, column=0, sticky="ew", padx=12, pady=(4, 12))
         entry_row.grid_columnconfigure(0, weight=1)
         self.message_entry = ctk.CTkEntry(entry_row, height=40, placeholder_text="Nhập tin nhắn...")
         self.message_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
         self.message_entry.bind("<Return>", lambda _event: self.send_message())
+        self.message_entry.bind("<KeyRelease>", self._on_message_key_release)
         ctk.CTkButton(entry_row, text="Gửi", width=80, height=40, command=self.send_message).grid(row=0, column=1)
 
         sidebar = ctk.CTkFrame(self, width=280, corner_radius=12)
@@ -63,14 +71,42 @@ class MainView(ctk.CTkFrame):
         text = self.message_entry.get().strip()
         if not text:
             return
+        self._set_local_typing(False)
         try:
             self.on_send(self.selected_user, text)
             self.message_entry.delete(0, "end")
         except Exception as exc:
             self.show_system(f"Không gửi được tin nhắn: {exc}")
 
+    def _on_message_key_release(self, _event=None):
+        if self.message_entry.get().strip():
+            if not self._typing_active:
+                self._typing_active = True
+                self.on_typing(self.selected_user or "", True)
+            if self._typing_after_id is not None:
+                try:
+                    self.after_cancel(self._typing_after_id)
+                except Exception:
+                    pass
+            self._typing_after_id = self.after(1500, lambda: self._set_local_typing(False))
+        else:
+            self._set_local_typing(False)
+
+    def _set_local_typing(self, typing: bool):
+        if self._typing_after_id is not None:
+            try:
+                self.after_cancel(self._typing_after_id)
+            except Exception:
+                pass
+            self._typing_after_id = None
+        if self._typing_active != typing:
+            self._typing_active = typing
+            self.on_typing(self.selected_user or "", typing)
+
     def select_global(self):
+        self._set_local_typing(False)
         self.selected_user = None
+        self._clear_typing_display()
         self.chat_title.configure(text="Chat chung")
         self._highlight_users()
         self._render_history(self._global_history)
@@ -78,7 +114,9 @@ class MainView(ctk.CTkFrame):
     def select_private(self, username: str):
         if username == self.username:
             return
+        self._set_local_typing(False)
         self.selected_user = username
+        self._clear_typing_display()
         self._unread_private[username] = 0
         self.chat_title.configure(text=f"Chat riêng với {username}")
         self._highlight_users()
@@ -128,6 +166,36 @@ class MainView(ctk.CTkFrame):
         elif sender != self.username:
             self._unread_private[other] = self._unread_private.get(other, 0) + 1
             self._refresh_user_buttons()
+
+    def show_typing(self, sender: str, receiver: str, typing: bool):
+        if not sender or sender == self.username:
+            return
+        relevant = (not receiver and self.selected_user is None) or (receiver == self.username and self.selected_user == sender)
+        if not relevant:
+            return
+        if self._typing_display_after_id is not None:
+            try:
+                self.after_cancel(self._typing_display_after_id)
+            except Exception:
+                pass
+            self._typing_display_after_id = None
+        if typing:
+            text = f"{sender} đang nhập..."
+            self._typing_display_text = text
+            self.typing_label.configure(text=text)
+            self._typing_display_after_id = self.after(2500, self._clear_typing_display)
+        elif self._typing_display_text.startswith(f"{sender} đang nhập"):
+            self._clear_typing_display()
+
+    def _clear_typing_display(self):
+        if self._typing_display_after_id is not None:
+            try:
+                self.after_cancel(self._typing_display_after_id)
+            except Exception:
+                pass
+            self._typing_display_after_id = None
+        self._typing_display_text = ""
+        self.typing_label.configure(text="")
 
     def show_system(self, text: str):
         if not text:
