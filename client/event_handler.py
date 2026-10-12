@@ -1,5 +1,6 @@
 import json
 import logging
+from queue import Empty
 from typing import Any, Callable
 
 from common.protocol import MsgType
@@ -29,7 +30,7 @@ class EventHandler:
         while True:
             try:
                 item = self.client.incoming.get_nowait()
-            except Exception:
+            except Empty:
                 break
             self._dispatch(item)
         if self.udp_client is not None:
