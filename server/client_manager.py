@@ -130,6 +130,11 @@ class ClientManager:
                 if username != exclude and username in self._clients
             ]
 
+    def udp_heartbeat_is_fresh(self, username: str, now: float, timeout: float) -> bool:
+        with self._lock:
+            last_seen = self._udp_last_seen.get(username)
+            return username in self._clients and last_seen is not None and now - last_seen <= timeout
+
     def expired_udp_heartbeats(self, now: float, timeout: float) -> list[str]:
         with self._lock:
             return [
