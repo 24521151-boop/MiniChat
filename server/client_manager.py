@@ -40,7 +40,7 @@ class ClientManager:
             del self._clients[username]
             self._udp_tokens.pop(username, None)
             self._udp_endpoints.pop(username, None)
-            self._udp_last_seen[username] = time.monotonic()
+            self._udp_last_seen.pop(username, None)
             return True
 
     def names(self) -> list[str]:
@@ -136,7 +136,7 @@ class ClientManager:
                 return False
             self._udp_tokens[username] = token
             self._udp_endpoints.pop(username, None)
-            self._udp_last_seen.pop(username, None)
+            self._udp_last_seen[username] = time.monotonic()
             return True
 
     def authenticate_udp_token(self, token: str) -> Optional[str]:
