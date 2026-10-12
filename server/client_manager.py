@@ -3,6 +3,7 @@ import json
 import logging
 import socket
 import threading
+import time
 from typing import Optional
 
 from common.constants import ENCODING
@@ -92,7 +93,7 @@ class ClientManager:
                 return False
             self._udp_tokens[username] = token
             self._udp_endpoints.pop(username, None)
-            self._udp_last_seen.pop(username, None)
+            self._udp_last_seen[username] = time.monotonic()
             return True
 
     def authenticate_udp_token(self, token: str) -> Optional[str]:
