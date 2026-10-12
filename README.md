@@ -60,13 +60,8 @@ Yêu cầu phiên bản trên Python 3.12. Mở Terminal hoặc PowerShell tại
 ### 1. Tạo môi trường và cài thư viện
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install customtkinter
 ```
-
-Nếu PowerShell chặn kích hoạt môi trường, có thể chạy trực tiếp bằng `.venv\Scripts\python.exe` hoặc dùng Command Prompt.
 
 ### 2. Khởi động Server
 
