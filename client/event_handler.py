@@ -9,8 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class EventHandler:
-    """Routes queued network events to the GUI on Tk's main thread."""
-
     def __init__(self, client: TCPClient, view: Any, on_disconnected: Callable[[], None]) -> None:
         self.client = client
         self.view = view
@@ -50,8 +48,19 @@ class EventHandler:
             except json.JSONDecodeError:
                 logger.warning("Invalid user list received")
             return
+        if msg_type == MsgType.ROOM_LIST.value:
+            try:
+                rooms = json.loads(item.get("payload", "[]"))
+                if isinstance(rooms, list):
+                    self.view.set_rooms(rooms)
+            except json.JSONDecodeError:
+                logger.warning("Invalid room list received")
+            return
         if msg_type == MsgType.CHAT_ALL.value:
             self.view.show_global_message(item.get("sender", ""), item.get("payload", ""))
+            return
+        if msg_type == MsgType.CHAT_ROOM.value:
+            self.view.show_room_message(item.get("receiver", ""), item.get("sender", ""), item.get("payload", ""))
             return
         if msg_type == MsgType.CHAT_PRIVATE.value:
             self.view.show_private_message(item.get("sender", ""), item.get("receiver", ""), item.get("payload", ""))

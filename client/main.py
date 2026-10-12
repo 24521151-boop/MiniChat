@@ -1,6 +1,5 @@
 import logging
 import customtkinter as ctk
-from tkinter import messagebox
 
 from client.event_handler import EventHandler
 from client.tcp_client import TCPClient
@@ -53,7 +52,14 @@ class MiniChatApp(ctk.CTk):
         if self.login_view:
             self.login_view.destroy()
             self.login_view = None
-        self.main_view = MainView(self, username, self._send_message, self._logout)
+        self.main_view = MainView(
+            self,
+            username,
+            self._send_message,
+            self._logout,
+            self._create_room,
+            self._add_member,
+        )
         self.main_view.pack(fill="both", expand=True)
         self.event_handler = EventHandler(client, self.main_view, self._connection_lost)
         self.event_handler.poll()
@@ -61,10 +67,22 @@ class MiniChatApp(ctk.CTk):
     def _send_message(self, recipient: str | None, text: str):
         if not self.client:
             raise ConnectionError("Chưa kết nối tới server.")
-        if recipient:
+        if recipient and recipient.startswith("room:"):
+            self.client.send_room(recipient[5:], text)
+        elif recipient:
             self.client.send_private(recipient, text)
         else:
             self.client.send_global(text)
+
+    def _create_room(self, room_name: str):
+        if not self.client:
+            raise ConnectionError("Chưa kết nối tới server.")
+        self.client.create_room(room_name)
+
+    def _add_member(self, room_name: str, username: str):
+        if not self.client:
+            raise ConnectionError("Chưa kết nối tới server.")
+        self.client.add_member(room_name, username)
 
     def _logout(self):
         if self.event_handler:

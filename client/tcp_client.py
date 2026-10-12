@@ -7,9 +7,8 @@ from typing import Any
 from common.constants import BUFFER_SIZE, ENCODING, SERVER_IP, TCP_PORT
 from common.protocol import MsgType, create_message
 
-class TCPClient:
-    """Small TCP client; network receiver threads never update the GUI directly."""
 
+class TCPClient:
     def __init__(self, host: str = SERVER_IP, port: int = TCP_PORT) -> None:
         self.host = host
         self.port = port
@@ -74,6 +73,15 @@ class TCPClient:
 
     def send_private(self, recipient: str, text: str) -> None:
         self.send(MsgType.CHAT_PRIVATE, receiver=recipient, payload=text)
+
+    def send_room(self, room_name: str, text: str) -> None:
+        self.send(MsgType.CHAT_ROOM, receiver=room_name, payload=text)
+
+    def create_room(self, room_name: str) -> None:
+        self.send(MsgType.CREATE_ROOM, payload=room_name)
+
+    def add_member(self, room_name: str, username: str) -> None:
+        self.send(MsgType.ADD_MEMBER, receiver=username, payload=room_name)
 
     def logout(self) -> None:
         try:
