@@ -118,7 +118,7 @@ class MainView(ctk.CTkFrame):
         self._clear_typing_display()
         self._unread_private[username] = 0
         self.chat_title.configure(text=f"Chat riêng với {username}")
-        self._highlight_users()
+        self._refresh_user_buttons()
         self._render_history(self._private_history.setdefault(username, []), private=True)
 
     def set_users(self, known_names: list[str], online_names: list[str] | None = None):
