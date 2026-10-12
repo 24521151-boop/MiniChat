@@ -105,6 +105,7 @@ class TCPServer:
         finally:
             if username is not None:
                 self.handler.disconnect(username, conn)
+            self.clients.release_connection(conn)
             with self._threads_lock:
                 self._threads.discard(threading.current_thread())
             logger.info("Connection closed: %s", address)
