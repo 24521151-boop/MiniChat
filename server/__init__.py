@@ -1,1 +1,1 @@
-"""MiniChat TCP server package."""
+"""Gói server TCP của MiniChat."""
