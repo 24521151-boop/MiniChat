@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 import socket
@@ -97,7 +98,7 @@ class ClientManager:
     def authenticate_udp_token(self, token: str) -> Optional[str]:
         with self._lock:
             for username, expected in self._udp_tokens.items():
-                if username in self._clients and expected and secrets_compare(expected, token):
+                if username in self._clients and expected and hmac.compare_digest(expected, token):
                     return username
         return None
 
@@ -135,12 +136,38 @@ class ClientManager:
             last_seen = self._udp_last_seen.get(username)
             return username in self._clients and last_seen is not None and now - last_seen <= timeout
 
-    def expired_udp_heartbeats(self, now: float, timeout: float) -> list[str]:
+    def expire_udp_heartbeats(self, now: float, timeout: float) -> list[str]:
+        """Close TCP sessions whose UDP heartbeat has expired.
+
+        TCP connection threads remain responsible for final session removal and
+        broadcasting the updated online-user list.
+        """
         with self._lock:
-            return [
-                username for username, last_seen in self._udp_last_seen.items()
+            expired = [
+                (username, self._clients.get(username), last_seen)
+                for username, last_seen in self._udp_last_seen.items()
                 if username in self._clients and now - last_seen > timeout
             ]
+            for username, _conn, _last_seen in expired:
+                self._udp_last_seen.pop(username, None)
+                self._udp_endpoints.pop(username, None)
+                self._udp_tokens.pop(username, None)
+
+        closed: list[str] = []
+        for username, conn, _last_seen in expired:
+            if conn is None:
+                continue
+            try:
+                conn.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            try:
+                conn.close()
+            except OSError:
+                pass
+            logger.info("UDP heartbeat expired; closed TCP session for %s", username)
+            closed.append(username)
+        return closed
 
     def close_all(self) -> None:
         """Close every active socket during server shutdown."""
@@ -165,7 +192,3 @@ class ClientManager:
         payload = json.dumps(self.names(), ensure_ascii=False)
         self.broadcast(create_message(MsgType.USER_LIST, payload=payload))
 
-
-def secrets_compare(expected: str, supplied: str) -> bool:
-    import hmac
-    return hmac.compare_digest(expected, supplied)
