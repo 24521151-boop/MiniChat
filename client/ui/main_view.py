@@ -53,7 +53,7 @@ class MainView(ctk.CTkFrame):
         self.notifications = ctk.CTkTextbox(sidebar, height=130, wrap="word", state="disabled")
         self.notifications.grid(row=5, column=0, sticky="nsew", padx=8, pady=(2, 10))
         self._notification_history: list[str] = []
-        self.show_system("Bạn đã đăng nhập. Hãy chọn phòng chat để bắt đầu.")
+        self.show_system("Bạn đã đăng nhập.")
 
     def send_message(self):
         text = self.message_entry.get().strip()
