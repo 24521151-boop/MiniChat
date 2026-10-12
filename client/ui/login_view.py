@@ -10,7 +10,7 @@ class LoginView(ctk.CTkFrame):
         card = ctk.CTkFrame(self, corner_radius=18)
         card.place(relx=0.5, rely=0.5, anchor="center")
         ctk.CTkLabel(card, text="MiniChat", font=ctk.CTkFont(size=30, weight="bold")).pack(padx=36, pady=(28, 4))
-        ctk.CTkLabel(card, text="Trò chuyện qua mạng TCP", text_color=("gray40", "gray70")).pack(padx=30, pady=(0, 22))
+        ctk.CTkLabel(card, text="Trò chuyện qua mạng LAN", text_color=("gray40", "gray70")).pack(padx=30, pady=(0, 22))
         self.username_entry = ctk.CTkEntry(card, width=280, height=40, placeholder_text="Nhập tên người dùng")
         self.username_entry.pack(padx=28, pady=(0, 12))
         self.username_entry.bind("<Return>", lambda _event: self.submit())
