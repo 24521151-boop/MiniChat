@@ -1,1 +1,1 @@
-"""MiniChat client package."""
+"""Gói client của MiniChat."""
