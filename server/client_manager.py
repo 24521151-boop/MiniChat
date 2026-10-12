@@ -16,6 +16,7 @@ class ClientManager:
 
     def __init__(self) -> None:
         self._clients: dict[str, socket.socket] = {}
+        self._known_users: set[str] = set()
         self._udp_tokens: dict[str, str] = {}
         self._udp_endpoints: dict[str, tuple[str, int]] = {}
         self._udp_last_seen: dict[str, float] = {}
@@ -27,6 +28,7 @@ class ClientManager:
             if username in self._clients:
                 return False
             self._clients[username] = conn
+            self._known_users.add(username)
             return True
 
     def remove(self, username: str, conn: Optional[socket.socket] = None) -> bool:
@@ -43,6 +45,16 @@ class ClientManager:
     def names(self) -> list[str]:
         with self._lock:
             return sorted(self._clients.keys(), key=str.casefold)
+
+    def known_names(self) -> list[str]:
+        with self._lock:
+            return sorted(self._known_users, key=str.casefold)
+
+    def _user_list_payload(self) -> str:
+        with self._lock:
+            online = sorted(self._clients, key=str.casefold)
+            known = sorted(self._known_users, key=str.casefold)
+        return json.dumps({"known": known, "online": online}, ensure_ascii=False)
 
     def get(self, username: str) -> Optional[socket.socket]:
         with self._lock:
@@ -75,7 +87,7 @@ class ClientManager:
         for name, conn in failed:
             self.remove(name, conn)
         if failed:
-            names_payload = json.dumps(self.names(), ensure_ascii=False)
+            names_payload = self._user_list_payload()
             list_message = create_message(MsgType.USER_LIST, payload=names_payload).encode(ENCODING)
             with self._lock:
                 remaining = list(self._clients.items())
@@ -189,6 +201,7 @@ class ClientManager:
             self._udp_tokens.clear()
             self._udp_endpoints.clear()
             self._udp_last_seen.clear()
+            self._known_users.clear()
         for username, conn in clients:
             try:
                 conn.shutdown(socket.SHUT_RDWR)
@@ -201,6 +214,6 @@ class ClientManager:
             logger.info("Closed connection for %s during server shutdown", username)
 
     def publish_user_list(self) -> None:
-        payload = json.dumps(self.names(), ensure_ascii=False)
+        payload = self._user_list_payload()
         self.broadcast(create_message(MsgType.USER_LIST, payload=payload))
 
