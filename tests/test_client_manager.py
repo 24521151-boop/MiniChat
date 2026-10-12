@@ -1,4 +1,6 @@
+import socket
 import threading
+import time
 import unittest
 
 from server.client_manager import ClientManager
@@ -20,6 +22,22 @@ class FakeSocket:
 
 
 class ClientManagerTests(unittest.TestCase):
+
+    def test_client_without_udp_heartbeat_expires_after_timeout(self):
+        clients = ClientManager()
+        server_conn, client_conn = socket.socketpair()
+        try:
+            clients.add("Alice", server_conn)
+            registered_at = time.monotonic()
+            self.assertTrue(clients.register_udp_token("Alice", "alice-token"))
+
+            expired = clients.expire_udp_heartbeats(registered_at + 19, timeout=18)
+
+            self.assertEqual(expired, ["Alice"])
+        finally:
+            server_conn.close()
+            client_conn.close()
+
     def test_sending_to_one_client_does_not_block_another_client(self):
         clients = ClientManager()
         slow_client = FakeSocket(block_send=True)
