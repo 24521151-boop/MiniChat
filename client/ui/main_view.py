@@ -137,7 +137,7 @@ class MainView(ctk.CTkFrame):
         self._notification_history.append(entry)
         self._notification_history = self._notification_history[-100:]
         self.notifications.configure(state="normal")
-        self.notifications.insert("end", entry + "\\n")
+        self.notifications.insert("end", entry + "\n")
         self.notifications.see("end")
         self.notifications.configure(state="disabled")
 
