@@ -80,9 +80,8 @@ class MainView(ctk.CTkFrame):
 
     def _on_message_key_release(self, _event=None):
         if self.message_entry.get().strip():
-            if not self._typing_active:
-                self._typing_active = True
-                self.on_typing(self.selected_user or "", True)
+            self._typing_active = True
+            self.on_typing(self.selected_user or "", True)
             if self._typing_after_id is not None:
                 try:
                     self.after_cancel(self._typing_after_id)
