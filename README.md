@@ -20,13 +20,11 @@
 - **Trạng thái online/offline:** Theo dõi và cập nhật trạng thái trực tuyến của người dùng thông qua cơ chế gửi gói tin định kỳ (heartbeat).
 - **Trạng thái đang nhập:** Thông báo khi người dùng đang nhập tin nhắn, giúp những người tham gia cuộc trò chuyện nhận biết hoạt động của nhau.
 
-## Công nghệ
+## Công cụ và thư viện
 
-- Python 3.12 (64-bit)
-- [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
-- Socket TCP, UDP và threading
-- JSON; mỗi thông điệp TCP kết thúc bằng ký tự xuống dòng (`\\n`) để phân tách thông điệp trên TCP stream. UDP dùng từng datagram JSON riêng.
-- UDP heartbeat được xác thực bằng token phiên do Server cấp qua kết nối TCP sau khi đăng nhập thành công.
+- Ngôn ngữ lập trình: Python 3.12
+- Giao diện người dùng (GUI): Thư viện CustomTkinter
+- Giao thức và Kỹ thuật: Socket (TCP/UDP), Multi-threading (Xử lý đa luồng), định dạng dữ liệu JSON.
 
 ## Cấu trúc thư mục
 
