@@ -129,9 +129,10 @@ class MainView(ctk.CTkFrame):
         online_names = known_names if online_names is None else online_names
         self._users = sorted(set(known_names), key=str.casefold)
         self._online_users = set(online_names)
-        visible_names = {name for name in self._users if name != self.username}
+        visible_names = [name for name in self._users if name != self.username]
+        visible_name_set = set(visible_names)
 
-        for name in set(self._user_buttons) - visible_names:
+        for name in set(self._user_buttons) - visible_name_set:
             self._user_buttons.pop(name).destroy()
 
         for name in visible_names:
