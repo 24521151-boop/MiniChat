@@ -1,5 +1,6 @@
 import threading
 import unittest
+from unittest.mock import patch
 
 from server.client_manager import ClientManager
 
@@ -55,6 +56,34 @@ class ClientManagerTests(unittest.TestCase):
         self.assertEqual(first_result, [True])
         self.assertEqual(second_result, [True])
         self.assertEqual(fast_client.sent, [b"message to Bob"])
+
+
+class HeartbeatSocket:
+    def sendall(self, _data: bytes):
+        pass
+
+    def shutdown(self, _how):
+        pass
+
+    def close(self):
+        pass
+
+
+class ClientManagerHeartbeatTests(unittest.TestCase):
+    def test_registering_udp_token_starts_heartbeat_deadline(self):
+        clients = ClientManager()
+        clients.add("Alice", HeartbeatSocket())
+
+        with patch("server.client_manager.time.monotonic", return_value=100.0):
+            self.assertTrue(clients.register_udp_token("Alice", "session-token"))
+
+        self.assertEqual(clients.expire_udp_heartbeats(now=117.0, timeout=18.0), [])
+        self.assertEqual(clients.expire_udp_heartbeats(now=118.1, timeout=18.0), ["Alice"])
+
+    def test_udp_token_cannot_be_registered_for_unknown_user(self):
+        clients = ClientManager()
+
+        self.assertFalse(clients.register_udp_token("Unknown", "session-token"))
 
 
 if __name__ == "__main__":
