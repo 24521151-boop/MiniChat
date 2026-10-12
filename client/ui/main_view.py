@@ -15,7 +15,6 @@ class MainView(ctk.CTkFrame):
         self._global_history: list[tuple[str, str, str]] = []
         self._private_history: dict[str, list[tuple[str, str, str]]] = {}
         self._unread_private: dict[str, int] = {}
-        self._notification_history: list[str] = []
         self._typing_after_id = None
         self._typing_active = False
         self._typing_display_after_id = None
@@ -108,7 +107,7 @@ class MainView(ctk.CTkFrame):
         self.selected_user = None
         self._clear_typing_display()
         self.chat_title.configure(text="Chat chung")
-        self._highlight_users()
+        self._refresh_user_buttons()
         self._render_history(self._global_history)
 
     def select_private(self, username: str):
@@ -150,9 +149,6 @@ class MainView(ctk.CTkFrame):
             button.pack(fill="x", padx=3, pady=2)
         if self.selected_user and self.selected_user not in self._online_users:
             self.select_global()
-
-    def _highlight_users(self):
-        self.set_users(self._users, list(self._online_users))
 
     def show_global_message(self, sender: str, text: str):
         entry = (datetime.now().strftime("%H:%M:%S"), sender or "Người dùng", text)
@@ -209,8 +205,6 @@ class MainView(ctk.CTkFrame):
             return
         timestamp = datetime.now().strftime("%H:%M:%S")
         entry = f"[{timestamp}] {text}"
-        self._notification_history.append(entry)
-        self._notification_history = self._notification_history[-100:]
         self.notifications.configure(state="normal")
         self.notifications.insert("end", entry + "\n")
         self.notifications.see("end")
