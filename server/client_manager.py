@@ -3,6 +3,7 @@ import json
 import logging
 import socket
 import threading
+import time
 from typing import Optional
 
 from common.constants import ENCODING
@@ -39,7 +40,7 @@ class ClientManager:
             del self._clients[username]
             self._udp_tokens.pop(username, None)
             self._udp_endpoints.pop(username, None)
-            self._udp_last_seen.pop(username, None)
+            self._udp_last_seen[username] = time.monotonic()
             return True
 
     def names(self) -> list[str]:
