@@ -4,13 +4,21 @@ from typing import Any, Callable
 
 from common.protocol import MsgType
 from client.tcp_client import TCPClient
+from client.udp_client import UDPClient
 
 logger = logging.getLogger(__name__)
 
 
 class EventHandler:
-    def __init__(self, client: TCPClient, view: Any, on_disconnected: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        client: TCPClient,
+        view: Any,
+        on_disconnected: Callable[[], None],
+        udp_client: UDPClient | None = None,
+    ) -> None:
         self.client = client
+        self.udp_client = udp_client
         self.view = view
         self.on_disconnected = on_disconnected
         self._running = True
@@ -24,6 +32,18 @@ class EventHandler:
             except Exception:
                 break
             self._dispatch(item)
+        if self.udp_client is not None:
+            while True:
+                try:
+                    item = self.udp_client.incoming.get_nowait()
+                except Exception:
+                    break
+                if item.get("type") == "TYPING":
+                    self.view.show_typing(
+                        str(item.get("sender", "")),
+                        str(item.get("receiver", "")),
+                        item.get("typing") is True,
+                    )
         if self._running:
             try:
                 self.view.after(100, self.poll)
