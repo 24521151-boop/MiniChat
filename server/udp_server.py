@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 
-from common.constants import BUFFER_SIZE, ENCODING, UDP_PORT
+from common.constants import BUFFER_SIZE, UDP_PORT
 from server.client_manager import ClientManager
 from server.udp_message_handler import UDPMessageHandler
 
@@ -48,7 +48,7 @@ class UDPServer:
                         break
                     raise
                 self.handler.handle_datagram(data, address)
-                self.handler.check_timeouts()
+                self.clients.expire_udp_heartbeats(time.monotonic(), _HEARTBEAT_TIMEOUT)
         finally:
             self.stop()
 
