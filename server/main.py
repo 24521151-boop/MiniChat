@@ -8,7 +8,7 @@ from server.udp_server import UDPServer
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     tcp_server = TCPServer()
-    udp_server = UDPServer(tcp_server.clients, tcp_server.handler)
+    udp_server = UDPServer(tcp_server.clients)
     udp_thread = threading.Thread(target=udp_server.start, daemon=True, name="minichat-udp-server")
     udp_thread.start()
     try:
