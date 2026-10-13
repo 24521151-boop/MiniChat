@@ -4,7 +4,6 @@
 ![GUI](https://img.shields.io/badge/GUI-CustomTkinter-2E8B57)
 ![Network](https://img.shields.io/badge/Network-TCP%20%2B%20UDP-E58A24)
 ![Tests](https://img.shields.io/badge/Tests-unittest-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 
 **MiniChat** là ứng dụng nhắn tin nhiều người dùng được xây dựng bằng Python theo mô hình **Client–Server**, thực hiện trong khuôn khổ môn **IT005 — Mạng máy tính**. Dự án tập trung vận dụng lập trình socket, giao thức TCP/UDP, trao đổi dữ liệu JSON và xử lý đa luồng trong một ứng dụng có giao diện đồ họa.
 
@@ -60,9 +59,11 @@ Sơ đồ dưới đây thể hiện các thành phần chính và cách Client,
 ```text
 MiniChat/
 ├── common/
+│   ├── __init__.py
 │   ├── constants.py
 │   └── protocol.py
 ├── server/
+│   ├── __init__.py
 │   ├── main.py
 │   ├── tcp_server.py
 │   ├── tcp_message_handler.py
@@ -70,11 +71,13 @@ MiniChat/
 │   ├── udp_message_handler.py
 │   └── client_manager.py
 ├── client/
+│   ├── __init__.py
 │   ├── main.py
 │   ├── tcp_client.py
 │   ├── udp_client.py
 │   ├── event_handler.py
 │   └── ui/
+│       ├── __init__.py
 │       ├── login_view.py
 │       └── main_view.py
 ├── tests/
@@ -157,7 +160,3 @@ Các bài kiểm thử hiện có tập trung vào xử lý thông điệp TCP v
 - UDP không bảo đảm chuyển phát datagram; trạng thái đang nhập có thể bị bỏ lỡ khi mạng không ổn định.
 - Chưa có mã hóa TLS hoặc tính năng gửi tệp.
 - Dự án hướng đến mục đích học tập và demo mạng máy tính, chưa được thiết kế để triển khai như một dịch vụ nhắn tin công khai.
-
-## Giấy phép
-
-Dự án sử dụng giấy phép MIT. Xem tệp [LICENSE](LICENSE) để biết điều khoản áp dụng.
