@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+<title id="title">Luồng giao tiếp TCP và UDP trong MiniChat</title>
+<desc id="desc">Sơ đồ phân biệt TCP dùng cho đăng nhập và tin nhắn, UDP dùng cho heartbeat và trạng thái đang nhập.</desc>
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7faff"/><stop offset="1" stop-color="#edf4fb"/></linearGradient>
+ <filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#20334d" flood-opacity=".10"/></filter>
+ <marker id="b" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#2864b4"/></marker>
+ <marker id="g" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#16845b"/></marker>
+ <style>text{font-family:Inter,'Segoe UI',Arial,sans-serif;fill:#172b45}.title{font-size:32px;font-weight:750}.sub{font-size:16px;fill:#52677f}.head{font-size:23px;font-weight:700}.box{font-size:18px;font-weight:700}.desc{font-size:15px;fill:#405670}.tag{font-size:15px;font-weight:700}</style>
+</defs>
+<rect width="1440" height="820" rx="24" fill="url(#bg)"/>
+<text x="720" y="54" text-anchor="middle" class="title">Luồng giao tiếp mạng trong MiniChat</text>
+<text x="720" y="83" text-anchor="middle" class="sub">Tách riêng kênh truyền tin đáng tin cậy (TCP) và datagram phục vụ trạng thái (UDP)</text>
+<rect x="60" y="115" width="1320" height="315" rx="20" fill="#fff" stroke="#c8d8eb" stroke-width="2" filter="url(#s)"/>
+<text x="95" y="153" class="head" fill="#245da6">Luồng TCP — đăng nhập và nhắn tin (cổng 9999)</text>
+<rect x="95" y="188" width="220" height="100" rx="14" fill="#e5efff" stroke="#9ebbe8" stroke-width="1.5"/>
+<text x="205" y="224" text-anchor="middle" class="box">Client A</text><text x="205" y="250" text-anchor="middle" class="desc">TCPClient</text><text x="205" y="272" text-anchor="middle" class="desc">LOGIN / CHAT</text>
+<rect x="390" y="188" width="250" height="100" rx="14" fill="#f3f7ff" stroke="#b6c9e7" stroke-width="1.5"/>
+<text x="515" y="224" text-anchor="middle" class="box">TCPServer</text><text x="515" y="250" text-anchor="middle" class="desc">Nhận byte stream</text><text x="515" y="272" text-anchor="middle" class="desc">Tách thông điệp theo \n</text>
+<rect x="715" y="188" width="260" height="100" rx="14" fill="#f3f7ff" stroke="#b6c9e7" stroke-width="1.5"/>
+<text x="845" y="224" text-anchor="middle" class="box">TCPMessageHandler</text><text x="845" y="250" text-anchor="middle" class="desc">Xác thực / xử lý</text><text x="845" y="272" text-anchor="middle" class="desc">Chat chung / riêng</text>
+<rect x="1050" y="188" width="245" height="100" rx="14" fill="#e5efff" stroke="#9ebbe8" stroke-width="1.5"/>
+<text x="1172" y="224" text-anchor="middle" class="box">ClientManager</text><text x="1172" y="250" text-anchor="middle" class="desc">Quản lý phiên</text><text x="1172" y="272" text-anchor="middle" class="desc">Gửi / phát tin nhắn</text>
+<path d="M315 238 H380" stroke="#2864b4" stroke-width="3" marker-end="url(#b)"/><path d="M640 238 H705" stroke="#2864b4" stroke-width="3" marker-end="url(#b)"/><path d="M975 238 H1040" stroke="#2864b4" stroke-width="3" marker-end="url(#b)"/>
+<text x="720" y="331" text-anchor="middle" class="desc">JSON gồm type, sender, receiver, payload; ký tự xuống dòng \n phân tách từng thông điệp TCP.</text>
+<path d="M1172 288 V358 H205 V298" fill="none" stroke="#2864b4" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#b)"/>
+<text x="720" y="386" text-anchor="middle" class="tag" fill="#2864b4">Phản hồi và tin nhắn được chuyển về các Client phù hợp</text>
+<rect x="60" y="465" width="1320" height="290" rx="20" fill="#fff" stroke="#c8d8eb" stroke-width="2" filter="url(#s)"/>
+<text x="95" y="504" class="head" fill="#147b54">Luồng UDP — heartbeat và trạng thái đang nhập (cổng 9998)</text>
+<rect x="95" y="545" width="270" height="115" rx="14" fill="#e3f6ec" stroke="#9ed5bb" stroke-width="1.5"/>
+<text x="230" y="579" text-anchor="middle" class="box">UDPClient</text><text x="230" y="605" text-anchor="middle" class="desc">HEARTBEAT mỗi 5 giây</text><text x="230" y="630" text-anchor="middle" class="desc">TYPING khi nhập liệu</text>
+<rect x="445" y="545" width="270" height="115" rx="14" fill="#f1fbf6" stroke="#b8e2ce" stroke-width="1.5"/>
+<text x="580" y="579" text-anchor="middle" class="box">UDPServer</text><text x="580" y="605" text-anchor="middle" class="desc">Nhận datagram</text><text x="580" y="630" text-anchor="middle" class="desc">Chuyển đến handler</text>
+<rect x="795" y="545" width="270" height="115" rx="14" fill="#f1fbf6" stroke="#b8e2ce" stroke-width="1.5"/>
+<text x="930" y="579" text-anchor="middle" class="box">UDPMessageHandler</text><text x="930" y="605" text-anchor="middle" class="desc">Xác thực token/endpoint</text><text x="930" y="630" text-anchor="middle" class="desc">Xử lý HEARTBEAT / TYPING</text>
+<rect x="1140" y="545" width="190" height="115" rx="14" fill="#e3f6ec" stroke="#9ed5bb" stroke-width="1.5"/>
+<text x="1235" y="579" text-anchor="middle" class="box">Client B</text><text x="1235" y="605" text-anchor="middle" class="desc">Nhận TYPING</text><text x="1235" y="630" text-anchor="middle" class="desc">Cập nhật giao diện</text>
+<path d="M365 602 H435" stroke="#16845b" stroke-width="3" marker-end="url(#g)"/><path d="M715 602 H785" stroke="#16845b" stroke-width="3" marker-end="url(#g)"/><path d="M1065 602 H1130" stroke="#16845b" stroke-width="3" marker-end="url(#g)"/>
+<text x="720" y="706" text-anchor="middle" class="desc">Heartbeat quá hạn 18 giây: Server đóng phiên TCP tương ứng để luồng TCP dọn dẹp và cập nhật danh sách người dùng.</text>
+</svg>
