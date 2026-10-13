@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1120" viewBox="0 0 1440 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Kiến trúc hệ thống MiniChat</title>
+  <desc id="desc">Sơ đồ kiến trúc Client–Server của MiniChat, minh họa giao tiếp TCP cho chat và UDP cho heartbeat, trạng thái đang nhập.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7faff"/><stop offset="1" stop-color="#eef4fb"/></linearGradient>
+    <linearGradient id="client" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e5efff"/><stop offset="1" stop-color="#d6e6ff"/></linearGradient>
+    <linearGradient id="server" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6f7ef"/><stop offset="1" stop-color="#d2efdf"/></linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#20334d" flood-opacity=".10"/></filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#2864b4"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#16845b"/></marker>
+    <style>
+      text{font-family:Inter,'Segoe UI',Arial,sans-serif;fill:#172b45}
+      .title{font-size:34px;font-weight:750}.subtitle{font-size:17px;fill:#52677f}
+      .section{font-size:23px;font-weight:700}.box-title{font-size:21px;font-weight:700}.file{font-size:15px;fill:#52677f}.desc{font-size:16px;fill:#354b64}
+      .label{font-size:16px;font-weight:700}.small{font-size:14px;fill:#52677f}
+    </style>
+  </defs>
+  <rect width="1440" height="1120" rx="26" fill="url(#bg)"/>
+  <text x="720" y="58" text-anchor="middle" class="title">Kiến trúc hệ thống MiniChat</text>
+  <text x="720" y="89" text-anchor="middle" class="subtitle">Mô hình Client–Server • TCP cho tin nhắn • UDP cho heartbeat và trạng thái đang nhập</text>
+
+  <rect x="80" y="125" width="1280" height="238" rx="22" fill="#ffffff" stroke="#c9d8eb" stroke-width="2" filter="url(#shadow)"/>
+  <text x="112" y="163" class="section">1. Client A</text>
+  <rect x="112" y="184" width="1216" height="57" rx="12" fill="url(#client)" stroke="#b5cdf2"/>
+  <text x="720" y="208" text-anchor="middle" class="box-title">Giao diện CustomTkinter + EventHandler</text>
+  <text x="720" y="229" text-anchor="middle" class="file">main.py • ui/main_view.py • event_handler.py — nhận thao tác và cập nhật giao diện</text>
+  <rect x="190" y="263" width="480" height="73" rx="13" fill="#ffffff" stroke="#9ebbe8" stroke-width="1.5"/>
+  <text x="430" y="292" text-anchor="middle" class="box-title" fill="#245da6">TCPClient</text>
+  <text x="430" y="316" text-anchor="middle" class="desc">Đăng nhập • Chat chung • Chat riêng</text>
+  <rect x="770" y="263" width="480" height="73" rx="13" fill="#ffffff" stroke="#9ed5bb" stroke-width="1.5"/>
+  <text x="1010" y="292" text-anchor="middle" class="box-title" fill="#147b54">UDPClient</text>
+  <text x="1010" y="316" text-anchor="middle" class="desc">Heartbeat • Trạng thái đang nhập</text>
+
+  <path d="M430 336 V408" fill="none" stroke="#2864b4" stroke-width="4" marker-end="url(#arrowBlue)"/>
+  <text x="455" y="380" class="label" fill="#2864b4">TCP • cổng 9999</text>
+  <path d="M1010 336 V408" fill="none" stroke="#16845b" stroke-width="4" marker-end="url(#arrowGreen)"/>
+  <text x="1035" y="380" class="label" fill="#16845b">UDP • cổng 9998</text>
+
+  <rect x="80" y="420" width="1280" height="300" rx="22" fill="#ffffff" stroke="#c9d8eb" stroke-width="2" filter="url(#shadow)"/>
+  <text x="112" y="459" class="section">2. Các dịch vụ tại Server</text>
+  <rect x="112" y="480" width="570" height="92" rx="14" fill="#e8f0ff" stroke="#a9c3ee" stroke-width="1.5"/>
+  <text x="397" y="512" text-anchor="middle" class="box-title">TCPServer</text>
+  <text x="397" y="538" text-anchor="middle" class="file">tcp_server.py</text>
+  <text x="397" y="558" text-anchor="middle" class="desc">Nhận kết nối • Tách thông điệp JSON theo dòng</text>
+  <rect x="758" y="480" width="570" height="92" rx="14" fill="#e3f6ec" stroke="#9ed5bb" stroke-width="1.5"/>
+  <text x="1043" y="512" text-anchor="middle" class="box-title">UDPServer</text>
+  <text x="1043" y="538" text-anchor="middle" class="file">udp_server.py</text>
+  <text x="1043" y="558" text-anchor="middle" class="desc">Nhận và xử lý các datagram UDP</text>
+  <path d="M397 572 V595" stroke="#2864b4" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <path d="M1043 572 V595" stroke="#16845b" stroke-width="3" marker-end="url(#arrowGreen)"/>
+  <rect x="112" y="603" width="570" height="82" rx="14" fill="#f5f8ff" stroke="#c5d5ee" stroke-width="1.5"/>
+  <text x="397" y="632" text-anchor="middle" class="box-title">TCPMessageHandler</text>
+  <text x="397" y="656" text-anchor="middle" class="desc">Xử lý đăng nhập và điều phối tin nhắn</text>
+  <rect x="758" y="603" width="570" height="82" rx="14" fill="#f1fbf6" stroke="#b8e2ce" stroke-width="1.5"/>
+  <text x="1043" y="632" text-anchor="middle" class="box-title">UDPMessageHandler</text>
+  <text x="1043" y="656" text-anchor="middle" class="desc">Xác thực token • Xử lý heartbeat và TYPING</text>
+
+  <path d="M397 685 V752 H720 V776" fill="none" stroke="#2864b4" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <path d="M1043 685 V752 H720" fill="none" stroke="#16845b" stroke-width="3"/>
+  <rect x="170" y="790" width="1100" height="112" rx="18" fill="url(#server)" stroke="#8bc9aa" stroke-width="2" filter="url(#shadow)"/>
+  <text x="720" y="831" text-anchor="middle" class="box-title">3. ClientManager</text>
+  <text x="720" y="858" text-anchor="middle" class="desc">Quản lý phiên TCP, danh sách người dùng, UDP token và endpoint</text>
+  <text x="720" y="882" text-anchor="middle" class="desc">Hỗ trợ gửi tin nhắn đến đúng người nhận hoặc phát tin nhắn chung</text>
+
+  <path d="M720 902 V947" fill="none" stroke="#536a85" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <rect x="280" y="960" width="880" height="100" rx="18" fill="url(#client)" stroke="#a9c3ee" stroke-width="2" filter="url(#shadow)"/>
+  <text x="720" y="997" text-anchor="middle" class="box-title">4. Client B</text>
+  <text x="720" y="1023" text-anchor="middle" class="desc">TCPClient nhận tin nhắn • UDPClient nhận trạng thái • EventHandler cập nhật giao diện</text>
+  <text x="720" y="1090" text-anchor="middle" class="small">Sơ đồ logic dựa trên cấu trúc mã nguồn MiniChat; không thể hiện đầy đủ mọi nhánh xử lý lỗi.</text>
+</svg>
