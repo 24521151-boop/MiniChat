@@ -1,75 +1,112 @@
-# MiniChat - Bài tập nhóm môn IT005
+# MiniChat — Ứng dụng nhắn tin Client–Server
 
-![Python](https://img.shields.io/badge/Python-3.12%20(64--bit)-blue.svg)
-![CustomTkinter](https://img.shields.io/badge/GUI-CustomTkinter-green.svg)
-![Protocol](https://img.shields.io/badge/Network-TCP%20%2B%20UDP-orange.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/Python-3.12%20(64--bit)-3776AB?logo=python&logoColor=white)
+![GUI](https://img.shields.io/badge/GUI-CustomTkinter-2E8B57)
+![Network](https://img.shields.io/badge/Network-TCP%20%2B%20UDP-E58A24)
+![Tests](https://img.shields.io/badge/Tests-unittest-blue)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## I. Giới thiệu
+**MiniChat** là ứng dụng nhắn tin nhiều người dùng được xây dựng bằng Python theo mô hình **Client–Server**, thực hiện trong khuôn khổ môn **IT005 — Mạng máy tính**. Dự án tập trung vận dụng lập trình socket, giao thức TCP/UDP, trao đổi dữ liệu JSON và xử lý đa luồng trong một ứng dụng có giao diện đồ họa.
 
-**MiniChat** là ứng dụng nhắn tin nhiều người dùng theo mô hình **Client–Server**, viết bằng Python 3.12, sử dụng socket TCP cho tin nhắn, UDP cho heartbeat/trạng thái đang nhập, JSON và giao diện CustomTkinter.
+Ứng dụng cho phép người dùng đăng nhập bằng tên hiển thị, trao đổi tin nhắn trong chat chung hoặc chat riêng, theo dõi trạng thái người dùng và nhận thông báo khi người khác đang nhập tin nhắn.
 
-### 1. Các tính năng chính của MiniChat
+## Nội dung
 
-#### a. Giao tiếp bằng TCP
-- **Chat chung:** Cho phép người dùng gửi và nhận tin nhắn trong cuộc trò chuyện chung.
-- **Chat riêng:** Cho phép người dùng gửi và nhận tin nhắn riêng với một người dùng cụ thể.
-- **Đăng nhập:** Đảm bảo việc trao đổi yêu cầu đăng nhập và phản hồi giữa máy khách và máy chủ.
+- [Tính năng](#tính-năng)
+- [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
+- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+- [Cấu trúc dự án](#cấu-trúc-dự-án)
+- [Cài đặt và chạy trên Windows](#cài-đặt-và-chạy-trên-windows)
+- [Chạy qua mạng LAN](#chạy-qua-mạng-lan)
+- [Chạy kiểm thử](#chạy-kiểm-thử)
+- [Giới hạn hiện tại](#giới-hạn-hiện-tại)
 
-#### b. Cập nhật trạng thái bằng UDP
-- **Trạng thái online/offline:** Theo dõi và cập nhật trạng thái trực tuyến của người dùng thông qua cơ chế gửi gói tin định kỳ (heartbeat).
-- **Trạng thái đang nhập:** Thông báo khi người dùng đang nhập tin nhắn, giúp những người tham gia cuộc trò chuyện nhận biết hoạt động của nhau.
+## Tính năng
 
-### 2. Công cụ và thư viện
+- **Đăng nhập:** Người dùng tham gia bằng tên hiển thị; tên đang được sử dụng sẽ bị từ chối.
+- **Chat chung:** Server phát tin nhắn đến các Client đang trực tuyến. Lịch sử chat chung trong bộ nhớ được gửi cho người đăng nhập sau.
+- **Chat riêng:** Chuyển tin nhắn đến người nhận được chọn, không phát nội dung riêng tư đến các Client khác.
+- **Trạng thái người dùng:** Hiển thị người dùng đã biết và phân biệt trạng thái trực tuyến/ngoại tuyến trong phiên Server hiện tại.
+- **Trạng thái đang nhập:** Thông báo hoạt động nhập liệu qua UDP.
+- **Xử lý nhiều Client:** Server dùng đa luồng để phục vụ các kết nối TCP đồng thời.
 
-- **Ngôn ngữ lập trình:** Python 3.12
-- **Giao diện người dùng (GUI):** Thư viện CustomTkinter
-- **Giao thức và Kỹ thuật:** Socket (TCP/UDP), Multi-threading (Xử lý đa luồng), định dạng dữ liệu JSON.
+## Kiến trúc hệ thống
 
-### 3. Cấu trúc thư mục
+Sơ đồ dưới đây thể hiện các thành phần chính và cách Client, Server cùng sử dụng TCP/UDP. `ClientManager` là thành phần dùng chung để quản lý phiên kết nối, danh sách người dùng và thông tin endpoint UDP.
+
+![Sơ đồ kiến trúc hệ thống MiniChat](docs/images/minichat-architecture.svg)
+
+### Luồng giao tiếp TCP và UDP
+
+- **TCP — cổng 9999:** Dùng cho đăng nhập, danh sách người dùng, chat chung, chat riêng và thông báo hệ thống. Thông điệp được mã hóa JSON và phân tách bằng ký tự xuống dòng `\n`.
+- **UDP — cổng 9998:** Dùng cho heartbeat định kỳ và trạng thái đang nhập. Server xác thực token và endpoint UDP trước khi xử lý trạng thái.
+
+![Sơ đồ luồng giao tiếp TCP và UDP](docs/images/minichat-network-flow.svg)
+
+## Công nghệ sử dụng
+
+| Thành phần | Công nghệ |
+|---|---|
+| Ngôn ngữ | Python 3.12 |
+| Giao diện | CustomTkinter |
+| Giao tiếp tin nhắn | TCP Socket |
+| Heartbeat và trạng thái đang nhập | UDP Socket |
+| Định dạng thông điệp | JSON |
+| Xử lý đồng thời | `threading`, `queue` |
+| Kiểm thử | `unittest` |
+
+## Cấu trúc dự án
 
 ```text
 MiniChat/
 ├── common/
-│   ├── __init__.py
 │   ├── constants.py
 │   └── protocol.py
 ├── server/
-│   ├── __init__.py
 │   ├── main.py
 │   ├── tcp_server.py
-│   ├── client_manager.py
 │   ├── tcp_message_handler.py
 │   ├── udp_server.py
-│   └── udp_message_handler.py
+│   ├── udp_message_handler.py
+│   └── client_manager.py
 ├── client/
-│   ├── __init__.py
 │   ├── main.py
 │   ├── tcp_client.py
 │   ├── udp_client.py
 │   ├── event_handler.py
 │   └── ui/
-│       ├── __init__.py
 │       ├── login_view.py
 │       └── main_view.py
 ├── tests/
 │   ├── test_tcp_message_handler.py
 │   └── test_udp_message_handler.py
-├── .gitignore
+├── docs/
+│   └── images/
+│       ├── minichat-architecture.svg
+│       └── minichat-network-flow.svg
+├── requirements.txt
 └── README.md
 ```
 
-## II. Cài đặt và chạy trên Windows
+## Cài đặt và chạy trên Windows
 
-Yêu cầu Python 3.12. Mở Terminal hoặc PowerShell tại thư mục gốc của repository.
+### 1. Chuẩn bị môi trường
 
-### 1. Cài đặt customtkinter
+Cài đặt Python 3.12, tải hoặc clone repository, rồi mở Terminal/PowerShell **tại thư mục gốc `MiniChat`** — thư mục chứa `common`, `client` và `server`.
+
+Kiểm tra Python:
 
 ```powershell
-pip install customtkinter
+python --version
 ```
 
-### 2. Khởi động Server
+### 2. Cài đặt thư viện
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+### 3. Khởi động Server
 
 Mở Terminal thứ nhất tại thư mục gốc:
 
@@ -77,42 +114,50 @@ Mở Terminal thứ nhất tại thư mục gốc:
 python -m server.main
 ```
 
-Server lắng nghe TCP tại cổng `9999` và UDP tại cổng `9998`. Giữ cửa sổ này mở trong khi sử dụng ứng dụng.
+Giữ Terminal này mở trong suốt quá trình sử dụng. Theo cấu hình mặc định, Server lắng nghe TCP tại cổng `9999` và UDP tại cổng `9998`.
 
-### 3. Khởi động Client
+### 4. Khởi động Client
 
-Mở Terminal thứ hai tại cùng thư mục:
+Mở Terminal thứ hai tại **cùng thư mục gốc**:
 
 ```powershell
 python -m client.main
 ```
 
-Mở thêm cửa sổ Client bằng cách chạy lại lệnh để thử nhiều người dùng. Khi thử trên cùng máy, giữ `SERVER_IP = "127.0.0.1"` trong `common/constants.py`.
+Nhập tên người dùng trên cửa sổ đăng nhập. Muốn thử nhiều người dùng, mở thêm Terminal và chạy lại lệnh Client; mỗi cửa sổ sử dụng một tên khác nhau.
 
-## III. Chạy qua mạng LAN
+### 5. Kết thúc chương trình
+
+Đăng xuất hoặc đóng các cửa sổ Client. Để dừng Server, quay lại Terminal Server và nhấn `Ctrl + C`.
+
+## Chạy qua mạng LAN
 
 1. Khởi động Server trên máy chủ và xác định địa chỉ IPv4 nội bộ của máy đó.
-2. Trên các máy Client, sửa `SERVER_IP` trong `common/constants.py` thành IPv4 của máy chạy Server, ví dụ `192.168.1.10`.
-3. Cho phép Python hoặc cả cổng TCP `9999` và UDP `9998` qua Windows Firewall trên máy Server nếu được yêu cầu.
-4. Chạy Client bằng `python -m client.main`.
+2. Trên từng máy Client, mở `common/constants.py` và đổi `SERVER_IP` từ `127.0.0.1` thành địa chỉ IPv4 của máy Server, ví dụ `192.168.1.10`.
+3. Nếu kết nối bị Windows Firewall chặn, cho phép Python hoặc mở quyền giao tiếp phù hợp cho TCP cổng `9999` và UDP cổng `9998` trên máy Server.
+4. Chạy Client theo hướng dẫn ở trên.
 
-Không mở các cổng này ra Internet công cộng; bản demo chưa có mã hóa TLS hay cơ chế xác thực tài khoản. UDP token giúp gắn datagram với phiên đăng nhập hiện tại, nhưng không thay thế TLS hoặc cơ chế bảo mật đầy đủ.
+Chỉ nên thử trong máy cá nhân hoặc mạng LAN tin cậy. Không mở các cổng này trực tiếp ra Internet công cộng.
 
-## Kiểm thử demo
+## Chạy kiểm thử
 
-1. Khởi động Server.
-2. Mở hai hoặc ba Client với các tên khác nhau.
-3. Gửi tin nhắn trong Chat chung và xác nhận các Client đang kết nối đều nhận được.
-4. Đăng nhập thêm một Client sau khi đã gửi vài tin nhắn; xác nhận Client mới nhận được lịch sử Chat chung.
-5. Chọn một người trong danh sách để chat riêng; xác nhận người không được chọn không nhận tin nhắn riêng.
-6. Gõ vào ô tin nhắn và xác nhận Client phù hợp thấy trạng thái “đang nhập...”; dừng gõ để trạng thái tự biến mất.
-7. Thử đăng nhập hai lần với cùng một tên và thử tên không hợp lệ.
-8. Đóng một Client và kiểm tra danh sách người dùng được cập nhật.
+Tại thư mục gốc của dự án, chạy:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+Các bài kiểm thử hiện có tập trung vào xử lý thông điệp TCP và UDP, gồm phát tin nhắn chat chung, chuyển tin nhắn riêng, lịch sử chat chung, đăng ký heartbeat, xác thực endpoint và chuyển tiếp trạng thái đang nhập.
 
 ## Giới hạn hiện tại
 
-- Lịch sử Chat chung được giữ trong RAM, tối đa 500 tin nhắn trong lúc Server chạy; khởi động lại Server sẽ xóa lịch sử.
-- Lịch sử Chat riêng chỉ được giữ trong bộ nhớ của cửa sổ Client hiện tại, không được đồng bộ cho người đăng nhập sau.
-- UDP không bảo đảm chuyển phát datagram; trạng thái đang nhập có thể bị bỏ lỡ trong điều kiện mạng không ổn định.
-- Chưa có mã hóa TLS, tài khoản/mật khẩu hoặc gửi file.
-- Server dành cho bài tập và demo trong mạng tin cậy.
+- Đăng nhập dùng tên hiển thị, chưa có tài khoản/mật khẩu hoặc cơ chế lưu tài khoản.
+- Lịch sử chat chung được giữ trong RAM, tối đa 500 tin nhắn; lịch sử sẽ mất khi Server khởi động lại.
+- Lịch sử chat riêng chỉ được lưu trong bộ nhớ của cửa sổ Client hiện tại, không phải lịch sử riêng bền vững trên Server.
+- UDP không bảo đảm chuyển phát datagram; trạng thái đang nhập có thể bị bỏ lỡ khi mạng không ổn định.
+- Chưa có mã hóa TLS hoặc tính năng gửi tệp.
+- Dự án hướng đến mục đích học tập và demo mạng máy tính, chưa được thiết kế để triển khai như một dịch vụ nhắn tin công khai.
+
+## Giấy phép
+
+Dự án sử dụng giấy phép MIT. Xem tệp [LICENSE](LICENSE) để biết điều khoản áp dụng.
