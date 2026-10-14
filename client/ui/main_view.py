@@ -23,6 +23,8 @@ class MainView(ctk.CTkFrame):
         self._typing_active = False
         self._typing_display_after_id = None
         self._typing_display_text = ""
+        self._typing_users: set[str] = set()
+        self._typing_timers: dict[str, str] = {}
 
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=1, minsize=250)
@@ -198,30 +200,58 @@ class MainView(ctk.CTkFrame):
     def show_typing(self, sender: str, receiver: str, typing: bool):
         if not sender or sender == self.username:
             return
-        relevant = (not receiver and self.selected_user is None) or (receiver == self.username and self.selected_user == sender)
+
+        relevant = (
+            (not receiver and self.selected_user is None)
+            or (receiver == self.username and self.selected_user == sender)
+        )
         if not relevant:
             return
-        if self._typing_display_after_id is not None:
-            try:
-                self.after_cancel(self._typing_display_after_id)
-            except Exception:
-                pass
-            self._typing_display_after_id = None
+
         if typing:
-            text = f"{sender} đang nhập..."
-            self._typing_display_text = text
-            self.typing_label.configure(text=text)
-            self._typing_display_after_id = self.after(2500, self._clear_typing_display)
-        elif self._typing_display_text.startswith(f"{sender} đang nhập"):
-            self._clear_typing_display()
+            self._typing_users.add(sender)
+            old_timer = self._typing_timers.pop(sender, None)
+            if old_timer is not None:
+                try:
+                    self.after_cancel(old_timer)
+                except Exception:
+                    pass
+            self._typing_timers[sender] = self.after(
+                2500,
+                lambda name=sender: self._expire_typing(name),
+            )
+        else:
+            self._typing_users.discard(sender)
+            old_timer = self._typing_timers.pop(sender, None)
+            if old_timer is not None:
+                try:
+                    self.after_cancel(old_timer)
+                except Exception:
+                    pass
+
+        self._refresh_typing_display()
+
+    def _expire_typing(self, sender: str):
+        self._typing_timers.pop(sender, None)
+        self._typing_users.discard(sender)
+        self._refresh_typing_display()
+
+    def _refresh_typing_display(self):
+        users = sorted(self._typing_users, key=str.casefold)
+        self._typing_display_text = "\n".join(
+            f"{name} đang nhập..." for name in users
+        )
+        self.typing_label.configure(text=self._typing_display_text)
 
     def _clear_typing_display(self):
-        if self._typing_display_after_id is not None:
+        for timer in self._typing_timers.values():
             try:
-                self.after_cancel(self._typing_display_after_id)
+                self.after_cancel(timer)
             except Exception:
                 pass
-            self._typing_display_after_id = None
+        self._typing_timers.clear()
+        self._typing_users.clear()
+        self._typing_display_after_id = None
         self._typing_display_text = ""
         self.typing_label.configure(text="")
 
